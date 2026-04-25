@@ -120,7 +120,7 @@
         <textarea id="bodyText" rows="12" oninput="updatePreview()">Nova, the strikingly patterned calico known for her piercing green eyes and independent spirit, has once again captured the attention of her household.</textarea>
     </div>
 
-    <button class="export-btn" onclick="downloadHTML()">💾 SAVE FORMATTED ARTICLE</button>
+<button class="export-btn" onclick="publishToWeb()">🌐 PUBLISH TO LIVE WEBSITE</button>
 </div>
 
 <div id="preview-container" style="background:#808080; padding:20px; border:2px solid #000;">
@@ -128,30 +128,61 @@
 </div>
 
 <script>
-    function formatText(tag) {
-        const area = document.getElementById('bodyText');
-        const start = area.selectionStart;
-        const end = area.selectionEnd;
-        const text = area.value;
-        area.value = text.substring(0, start) + `<${tag}>` + text.substring(start, end) + `</${tag}>` + text.substring(end);
-        updatePreview();
+// 1. Initialize Supabase (Use your actual keys from Step 3)
+const supabaseUrl = 'YOUR_SUPABASE_URL';
+const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+// Formatting functions
+function formatText(tag) {
+    const area = document.getElementById('bodyText');
+    const start = area.selectionStart;
+    const end = area.selectionEnd;
+    const text = area.value;
+    area.value = text.substring(0, start) + `<${tag}>` + text.substring(start, end) + `</${tag}>` + text.substring(end);
+    updatePreview();
+}
+
+function insertTag(tag) {
+    const area = document.getElementById('bodyText');
+    const start = area.selectionStart;
+    const end = area.selectionEnd;
+    area.value = area.value.substring(0, start) + tag + area.value.substring(end);
+    updatePreview();
+}
+
+// 2. NEW: Function to save to the Cloud (Supabase)
+async function publishToWeb() {
+    const statusLabel = document.getElementById('dbStatus');
+    statusLabel.innerText = "[ SAVING... ]";
+
+    const { data, error } = await _supabase
+      .from('articles')
+      .insert([
+        { 
+          title: document.getElementById('headline').value,
+          content: document.getElementById('bodyText').value,
+          date: document.getElementById('reportDate').value,
+          image_url: document.getElementById('imgSrc').value
+        }
+      ]);
+
+    if (error) {
+        alert("Error: " + error.message);
+        statusLabel.innerText = "[ ERROR ]";
+    } else {
+        alert("Success! Nova's story is now live.");
+        statusLabel.innerText = "[ PUBLISHED ]";
     }
+}
 
-    function insertTag(tag) {
-        const area = document.getElementById('bodyText');
-        const start = area.selectionStart;
-        const end = area.selectionEnd;
-        area.value = area.value.substring(0, start) + tag + area.value.substring(end);
-        updatePreview();
-    }
+function generateFullHTML() {
+    const date = document.getElementById('reportDate').value;
+    const head = document.getElementById('headline').value;
+    const body = document.getElementById('bodyText').value;
+    const img = document.getElementById('imgSrc').value;
 
-    function generateFullHTML() {
-        const date = document.getElementById('reportDate').value;
-        const head = document.getElementById('headline').value;
-        const body = document.getElementById('bodyText').value;
-        const img = document.getElementById('imgSrc').value;
-
-        return `<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html>
 <head>
     <style>
@@ -173,25 +204,16 @@
     </div>
 </body>
 </html>`;
-    }
+}
 
-    function updatePreview() {
-        const frame = document.getElementById('preview');
-        const code = generateFullHTML();
-        const blob = new Blob([code], {type: 'text/html'});
-        frame.src = URL.createObjectURL(blob);
-    }
+function updatePreview() {
+    const frame = document.getElementById('preview');
+    const code = generateFullHTML();
+    const blob = new Blob([code], {type: 'text/html'});
+    frame.src = URL.createObjectURL(blob);
+}
 
-    function downloadHTML() {
-        const code = generateFullHTML();
-        const blob = new Blob([code], {type: 'text/html'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'news_article.html';
-        a.click();
-    }
-
-    updatePreview();
+updatePreview();
 </script>
 
 </body>
