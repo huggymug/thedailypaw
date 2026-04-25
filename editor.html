@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <title>Huggymug Productions | Professional News Editor</title>
+    <title>Huggymug Productions | News Editor v5</title>
     <style>
         :root {
             --win-gray: #d4d0c8;
             --win-blue: #000080;
-            --accent: #c0392b;
         }
 
         body {
@@ -30,14 +28,26 @@
             height: fit-content;
         }
 
-        h2 { margin-top: 0; font-size: 1.1rem; background: var(--win-blue); color: white; padding: 5px; text-align: center; }
+        .win-title { 
+            margin-top: 0; 
+            font-size: 1.1rem; 
+            background: var(--win-blue); 
+            color: white; 
+            padding: 5px; 
+        }
 
         .field { margin-bottom: 12px; }
         label { display: block; font-weight: bold; font-size: 0.85rem; margin-bottom: 3px; }
         
-        input { width: 94%; padding: 4px; border: 2px solid #404040; background: white; font-family: "Courier New", monospace; }
+        input, textarea { 
+            width: 94%; 
+            padding: 4px; 
+            border: 2px solid #404040; 
+            background: white; 
+            font-family: "Courier New", monospace; 
+        }
 
-        /* Toolbar Styles */
+        /* Formatting Toolbar */
         .toolbar {
             display: flex;
             flex-wrap: wrap;
@@ -65,15 +75,6 @@
             border-bottom: 1px solid #fff;
         }
 
-        textarea {
-            width: 94%;
-            padding: 4px;
-            border: 2px solid #404040;
-            background: white;
-            font-family: "Courier New", monospace;
-            white-space: pre-wrap;
-        }
-
         .export-btn {
             width: 100%;
             padding: 10px;
@@ -84,18 +85,17 @@
             border-bottom: 2px solid #404040;
             cursor: pointer;
             font-weight: bold;
-            text-transform: uppercase;
         }
     </style>
 </head>
 <body>
 
 <div id="editor">
-    <h2>[ HUGGYMUG_NEWS_EDITOR.EXE ]</h2>
+    <div class="win-title">[ HUGGYMUG_NEWS_EDITOR.EXE ]</div>
     
-    <div class="field">
-        <label>Date of Report:</label>
-        <input type="text" id="reportDate" value="April 25, 2026" oninput="updatePreview()">
+    <div class="field" style="margin-top:10px;">
+        <label>Date:</label>
+        <input type="text" id="reportDate" value="4/25/2026" oninput="updatePreview()">
     </div>
 
     <div class="field">
@@ -104,40 +104,36 @@
     </div>
 
     <div class="field">
-        <label>Article Content Editor:</label>
+        <label>Image Filename:</label>
+        <input type="text" id="imgSrc" value="FIELAPHOTOS.png" oninput="updatePreview()">
+    </div>
+
+    <div class="field">
+        <label>Article Content:</label>
         <div class="toolbar">
             <button class="tool-btn" onclick="formatText('b')">B</button>
             <button class="tool-btn" onclick="formatText('i')">I</button>
             <button class="tool-btn" onclick="formatText('s')">S</button>
-            <button class="tool-btn" onclick="insertTag('<br>')">New Line</button>
+            <button class="tool-btn" onclick="insertTag('<br>')">Line</button>
             <button class="tool-btn" onclick="insertTag('&nbsp;&nbsp;&nbsp;&nbsp;')">Tab</button>
         </div>
-        <textarea id="bodyText" rows="15" oninput="updatePreview()">Nova, the strikingly patterned calico known for her piercing green eyes and independent spirit, has once again captured the attention of her household. As of press time, she was reportedly napping on a laptop, effectively halting all local productivity.</textarea>
+        <textarea id="bodyText" rows="12" oninput="updatePreview()">Nova, the strikingly patterned calico known for her piercing green eyes and independent spirit, has once again captured the attention of her household.</textarea>
     </div>
 
-    <button class="export-btn" onclick="downloadHTML()">💾 EXPORT FORMATTED ARTICLE</button>
+    <button class="export-btn" onclick="downloadHTML()">💾 SAVE FORMATTED ARTICLE</button>
 </div>
 
-<div id="preview-container" style="background:#808080; padding:20px; border:2px solid #000; overflow-y:auto;">
+<div id="preview-container" style="background:#808080; padding:20px; border:2px solid #000;">
     <iframe id="preview" style="width:100%; height:90vh; background:white; border:none;"></iframe>
 </div>
 
 <script>
-    // Replace the text inside the ' ' with your actual data from Supabase
-    const supabaseUrl = 'https://wemdedhwtlirdevkplch.supabase.co'; 
-    const supabaseKey = 'sb_publishable_8g3mozQ6ouUMEKZkVMvfFA_K9f__5vL';
-
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-    
-    // Formatting Logic
     function formatText(tag) {
         const area = document.getElementById('bodyText');
         const start = area.selectionStart;
         const end = area.selectionEnd;
         const text = area.value;
-        const selected = text.substring(start, end);
-        
-        area.value = text.substring(0, start) + `<${tag}>` + selected + `</${tag}>` + text.substring(end);
+        area.value = text.substring(0, start) + `<${tag}>` + text.substring(start, end) + `</${tag}>` + text.substring(end);
         updatePreview();
     }
 
@@ -149,63 +145,51 @@
         updatePreview();
     }
 
-    function generateCode() {
+    function generateFullHTML() {
         const date = document.getElementById('reportDate').value;
         const head = document.getElementById('headline').value;
         const body = document.getElementById('bodyText').value;
+        const img = document.getElementById('imgSrc').value;
 
         return `<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <style>
-        :root { --primary-red: #c0392b; }
-        body { font-family: 'Georgia', serif; line-height: 1.6; color: #2c3e50; background: #f4f7f6; margin: 0; padding: 0; }
-        header { background: white; border-bottom: 4px solid #000; padding: 20px 0; text-align: center; }
-        .site-title { font-size: 3rem; text-transform: uppercase; font-weight: 900; margin: 0; }
-        .container { max-width: 700px; margin: 40px auto; background: white; padding: 40px; border: 1px solid #ccc; box-shadow: 10px 10px 0px #000; }
-        .meta-info { font-family: Arial; font-size: 0.8rem; color: #7f8c8d; margin-bottom: 25px; display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 10px;}
-        .dropcap { float: left; font-size: 4rem; line-height: 0.8; padding: 4px 8px 0 0; color: var(--primary-red); }
-        footer { text-align: center; padding: 20px; font-size: 0.8rem; color: #95a5a6; background: #fff; margin-top: 40px; }
+        body { font-family: 'Georgia', serif; line-height: 1.6; color: #2c3e50; margin: 0; padding: 20px; background: #f4f4f4; }
+        .paper { max-width: 600px; margin: auto; background: white; padding: 40px; border: 1px solid #ccc; box-shadow: 10px 10px 0px #000; }
+        h1 { font-size: 2.5rem; border-bottom: 3px solid black; padding-bottom: 10px; margin-top: 0; }
+        .meta { font-family: sans-serif; font-size: 0.8rem; text-transform: uppercase; color: #666; margin-bottom: 20px; }
+        img { width: 100%; height: auto; border: 1px solid #000; }
+        .dropcap { float: left; font-size: 4rem; line-height: 0.8; padding: 4px 8px 0 0; color: #c0392b; }
     </style>
 </head>
 <body>
-    <header><h1 class="site-title">The Daily Paw</h1></header>
-    <div class="container">
-        <div class="meta-info"><span>Official Report</span><span>${date}</span></div>
+    <div class="paper">
+        <div class="meta">Breaking News | ${date}</div>
         <h1>${head}</h1>
-        <img src="FIELAPHOTOS.png" style="width:100%; border:1px solid #000;">
+        <div class="meta">By The Daily Paw Correspondent</div>
+        <img src="${img}">
         <p><span class="dropcap">${body.charAt(0)}</span>${body.substring(1)}</p>
     </div>
-    <footer>&copy; 2026 Huggymug Productions</footer>
 </body>
 </html>`;
     }
 
     function updatePreview() {
-        document.getElementById('preview').srcdoc = generateCode();
+        const frame = document.getElementById('preview');
+        const code = generateFullHTML();
+        const blob = new Blob([code], {type: 'text/html'});
+        frame.src = URL.createObjectURL(blob);
     }
 
     function downloadHTML() {
-const supabaseUrl = 'YOUR_SUPABASE_URL';
-const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-async function publishArticle() {
-    const { data, error } = await supabase
-      .from('articles')
-      .insert([
-        { 
-          title: document.getElementById('headline').value,
-          content: document.getElementById('bodyText').value,
-          date: document.getElementById('reportDate').value,
-          image_url: "FIELAPHOTOS.png"
-        }
-      ]);
-
-    if (error) alert("Error saving: " + error.message);
-    else alert("Article Published to The Daily Paw!");
-}
+        const code = generateFullHTML();
+        const blob = new Blob([code], {type: 'text/html'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'news_article.html';
+        a.click();
+    }
 
     updatePreview();
 </script>
