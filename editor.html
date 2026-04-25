@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Huggymug Productions | Stable Editor v6</title>
+    <title>Huggymug Productions | News Editor v7</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --win-gray: #d4d0c8; --win-blue: #000080; }
@@ -9,11 +9,12 @@
         #editor { background: var(--win-gray); color: black; padding: 15px; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; height: fit-content; }
         .win-title { background: var(--win-blue); color: white; padding: 5px; font-weight: bold; display: flex; justify-content: space-between; }
         .field { margin-bottom: 12px; }
-        label { display: block; font-weight: bold; font-size: 0.85rem; }
+        label { display: block; font-weight: bold; font-size: 0.85rem; cursor: pointer; }
         input, textarea { width: 94%; padding: 4px; border: 2px solid #404040; background: white; font-family: "Courier New", monospace; }
         .toolbar { display: flex; gap: 2px; background: #808080; padding: 2px; border: 1px solid #404040; }
         .tool-btn { padding: 2px 8px; background: var(--win-gray); border: 1px solid #fff; border-right: 1px solid #404040; border-bottom: 1px solid #404040; cursor: pointer; font-weight: bold; }
         .export-btn { width: 100%; padding: 10px; margin-top: 5px; background: #2ecc71; color: white; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; }
+        #debug-log { background: black; color: #00ff00; font-family: monospace; font-size: 0.75rem; padding: 10px; margin-top: 10px; height: 60px; overflow-y: auto; border: 2px inset #fff; }
     </style>
 </head>
 <body>
@@ -21,38 +22,39 @@
 <div id="editor">
     <div class="win-title">
         <span>[ HUGGYMUG_NEWS_EDITOR.EXE ]</span>
-        <span id="dbStatus" style="color: #00ff00;">[ ONLINE ]</span>
+        <span id="dbStatus" style="color: #ffff00;">[ CONNECTING... ]</span>
     </div>
     
     <div class="field" style="margin-top:10px;">
-        <label>Date:</label>
-        <input type="text" id="reportDate" value="4/25/2026">
+        <label for="reportDate">Date of Report:</label>
+        <input type="text" id="reportDate" value="April 25, 2026">
     </div>
 
     <div class="field">
-        <label>Headline:</label>
-        <input type="text" id="headline" value="Local Icon Nova Spotted in Rare Moment of Stillness">
+        <label for="headline">Article Headline:</label>
+        <input type="text" id="headline" value="Local Icon Nova Spotted">
     </div>
 
     <div class="field">
-        <label>Image Filename:</label>
+        <label for="imgSrc">Image Filename:</label>
         <input type="text" id="imgSrc" value="FIELAPHOTOS.png">
     </div>
 
     <div class="field">
-        <label>Article Content:</label>
+        <label for="bodyText">Article Content:</label>
         <div class="toolbar">
             <button class="tool-btn" onclick="formatText('b')">B</button>
             <button class="tool-btn" onclick="formatText('i')">I</button>
             <button class="tool-btn" onclick="formatText('s')">S</button>
             <button class="tool-btn" onclick="insertTag('<br>')">Line</button>
-            <button class="tool-btn" onclick="insertTag('&nbsp;&nbsp;&nbsp;&nbsp;')">Tab</button>
         </div>
-        <textarea id="bodyText" rows="12">Nova, the strikingly patterned calico known for her piercing green eyes and independent spirit, has once again captured the attention of her household.</textarea>
+        <textarea id="bodyText" rows="10">Nova, the strikingly patterned calico...</textarea>
     </div>
 
     <button class="tool-btn" style="width:100%; margin-bottom:5px;" onclick="updatePreview()">🔄 REFRESH PREVIEW</button>
     <button class="export-btn" onclick="publishToWeb()">🌐 PUBLISH TO SUPABASE</button>
+
+    <div id="debug-log">System initialized. Ready to publish.</div>
 </div>
 
 <div id="preview-container" style="background:#808080; padding:20px; border:2px solid #000;">
@@ -60,10 +62,16 @@
 </div>
 
 <script>
-    // FILL THESE IN WITH YOUR SETTINGS
-    const supabaseUrl = 'YOUR_SUPABASE_URL';
-    const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+    // 1. FILL THESE WITH YOUR KEYS
+    const supabaseUrl = 'PASTE_YOUR_URL_HERE';
+    const supabaseKey = 'PASTE_YOUR_ANON_KEY_HERE';
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    function log(msg, isError = false) {
+        const logger = document.getElementById('debug-log');
+        const color = isError ? "#ff5555" : "#00ff00";
+        logger.innerHTML = `<span style="color:${color}">${isError ? '[ERROR]' : '[OK]'} ${msg}</span><br>` + logger.innerHTML;
+    }
 
     function formatText(tag) {
         const area = document.getElementById('bodyText');
@@ -86,34 +94,19 @@
         const body = document.getElementById('bodyText').value;
         const img = document.getElementById('imgSrc').value;
 
-        const fullHTML = `
-        <html>
-        <head>
-            <style>
-                body { font-family: 'Georgia', serif; line-height: 1.6; color: #2c3e50; padding: 20px; background: #f4f4f4; }
-                .paper { max-width: 600px; margin: auto; background: white; padding: 40px; border: 1px solid #ccc; box-shadow: 10px 10px 0px #000; }
-                h1 { font-size: 2.5rem; border-bottom: 3px solid black; padding-bottom: 10px; margin-top: 0; }
-                .meta { font-family: sans-serif; font-size: 0.8rem; text-transform: uppercase; color: #666; margin-bottom: 20px; }
-                img { width: 100%; height: auto; border: 1px solid #000; }
-                .dropcap { float: left; font-size: 4rem; line-height: 0.8; padding: 4px 8px 0 0; color: #c0392b; }
-            </style>
-        </head>
-        <body>
-            <div class="paper">
-                <div class="meta">Breaking News | ${date}</div>
-                <h1>${head}</h1>
-                <div class="meta">By The Daily Paw Correspondent</div>
-                <img src="${img}">
-                <p><span class="dropcap">${body.charAt(0)}</span>${body.substring(1)}</p>
-            </div>
-        </body>
-        </html>`;
+        const fullHTML = `<html><body style="font-family:serif; padding:20px;">
+            <div style="max-width:500px; margin:auto; border:1px solid #ccc; padding:20px; box-shadow:5px 5px 0 #000;">
+                <small>${date}</small>
+                <h1 style="border-bottom:2px solid #000;">${head}</h1>
+                <img src="${img}" style="width:100%; border:1px solid #000;">
+                <p>${body}</p>
+            </div></body></html>`;
 
-        const frame = document.getElementById('preview');
-        frame.srcdoc = fullHTML;
+        document.getElementById('preview').srcdoc = fullHTML;
     }
 
     async function publishToWeb() {
+        log("Attempting to publish...");
         const { data, error } = await _supabase
           .from('articles')
           .insert([{ 
@@ -123,8 +116,13 @@
               image_url: document.getElementById('imgSrc').value
           }]);
 
-        if (error) alert("Upload Failed: " + error.message);
-        else alert("Published Successfully!");
+        if (error) {
+            log(error.message, true);
+            console.error(error);
+        } else {
+            log("Published successfully to articles table!");
+            document.getElementById('dbStatus').innerText = "[ PUBLISHED ]";
+        }
     }
 
     updatePreview();
