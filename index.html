@@ -7,22 +7,18 @@
         body { background: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 20px; }
         .win-window { background: #d4d0c8; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; color: black; padding: 15px; max-width: 800px; margin: auto; }
         .header { background: #000080; color: white; padding: 5px; font-weight: bold; margin-bottom: 15px; }
-        
-        /* Search Bar Area */
         .search-box { margin-bottom: 20px; display: flex; gap: 10px; }
         input { flex-grow: 1; padding: 5px; border: 2px solid #404040; }
         button { padding: 5px 15px; background: #d4d0c8; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; }
-        
-        /* Article List Items */
-        .article-link { background: white; border: 1px solid #000; margin-bottom: 10px; padding: 10px; display: block; color: black; text-decoration: none; }
-        .article-link:hover { background: #ffffcc; border: 1px solid #000080; }
-        .article-date { font-size: 0.8rem; color: #666; }
+        .article-link { display: block; padding: 10px; background: white; border: 1px solid #808080; margin-bottom: 5px; text-decoration: none; color: black; }
+        .article-link:hover { background: #ffffcc; border: 1px solid #000; }
+        .article-date { font-size: 0.75rem; color: #666; }
     </style>
 </head>
 <body>
 
 <div class="win-window">
-    <div class="header">THE_DAILY_PAW_ARCHIVE.EXE</div>
+    <div class="header">HUGGYMUG_ARCHIVE.EXE</div>
     
     <div class="search-box">
         <input type="text" id="searchInput" placeholder="Search by headline..." oninput="searchArticles()">
@@ -30,31 +26,36 @@
     </div>
 
     <div id="articleList">
-        <p>Loading database...</p>
+        <p>Initializing connection...</p>
     </div>
 </div>
 
 <script>
-    const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
+    // FIX: Corrected URL and Variable Placement
+    const supabaseUrl = 'https://wemdedhwtlirdevkplch.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o'; // <--- Use the long key from your dashboard
+    
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    // This will fix the "Stuck on Connecting" status
-    if (_supabase) {
-       document.getElementById('dbStatus').innerText = "[ ONLINE ]";
-       document.getElementById('dbStatus').style.color = "#00ff00";
-    }
     async function searchArticles() {
         const query = document.getElementById('searchInput').value;
         const list = document.getElementById('articleList');
 
+        // Check if client initialized
+        if (!_supabase) {
+            list.innerHTML = "<p style='color:red;'>[ERROR] Client not initialized.</p>";
+            return;
+        }
+
         let { data: articles, error } = await _supabase
             .from('articles')
             .select('*')
-            .ilike('title', `%${query}%`) // Searches titles
+            .ilike('title', `%${query}%`)
             .order('created_at', { ascending: false });
 
         if (error) {
-            list.innerHTML = "<p>Error connecting to Supabase.</p>";
+            console.error(error);
+            list.innerHTML = `<p style='color:red;'>Error: ${error.message}</p>`;
             return;
         }
 
@@ -63,7 +64,7 @@
         articles.forEach(art => {
             const item = document.createElement('a');
             item.className = 'article-link';
-            item.href = `article_view.html?id=${art.id}`; // You'd build a viewer page later
+            item.href = `article_view.html?id=${art.id}`;
             item.innerHTML = `
                 <div class="article-date">${art.date}</div>
                 <strong>${art.title}</strong>
@@ -72,8 +73,8 @@
         });
     }
 
-    // Load all articles on start
-    searchArticles();
+    // Run search immediately on load to show all articles
+    window.onload = searchArticles;
 </script>
 
 </body>
