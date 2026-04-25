@@ -1,170 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Daily Paw | Nova the Calico</title>
+    <title>The Daily Paw | Archive</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --primary-red: #c0392b;
-            --text-dark: #2c3e50;
-            --bg-light: #f4f7f6;
-        }
-
-        body {
-            font-family: 'Georgia', serif;
-            line-height: 1.6;
-            color: var(--text-dark);
-            background-color: var(--bg-light);
-            margin: 0;
-            padding: 0;
-        }
-
-        /* Header & Navigation */
-        header {
-            background: white;
-            border-bottom: 4px solid var(--text-dark);
-            padding: 20px 0;
-            text-align: center;
-        }
-
-        .site-title {
-            font-size: 3rem;
-            text-transform: uppercase;
-            font-weight: 900;
-            margin: 0;
-            letter-spacing: -1px;
-        }
-
-        .breaking-banner {
-            background: var(--primary-red);
-            color: white;
-            padding: 10px;
-            font-family: 'Arial', sans-serif;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-        }
-
-        /* Main Content */
-        .container {
-            max-width: 800px;
-            margin: 40px auto;
-            background: white;
-            padding: 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        }
-
-        .headline {
-            font-size: 2.5rem;
-            line-height: 1.1;
-            margin-bottom: 20px;
-            color: #000;
-        }
-
-        .meta-info {
-            font-family: 'Arial', sans-serif;
-            font-size: 0.85rem;
-            color: #7f8c8d;
-            border-top: 1px solid #eee;
-            border-bottom: 1px solid #eee;
-            padding: 10px 0;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .article-image {
-            width: 100%;
-            height: auto;
-            border-radius: 4px;
-            margin-bottom: 15px;
-        }
-
-        .caption {
-            font-size: 0.9rem;
-            font-style: italic;
-            color: #666;
-            margin-bottom: 30px;
-            text-align: center;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 15px;
-        }
-
-        /* Content Styling */
-        .dropcap {
-            float: left;
-            font-size: 4rem;
-            line-height: 0.8;
-            padding-top: 4px;
-            padding-right: 8px;
-            color: var(--primary-red);
-        }
-
-        p {
-            margin-bottom: 20px;
-            font-size: 1.15rem;
-        }
-
-        blockquote {
-            font-size: 1.4rem;
-            font-style: italic;
-            border-left: 5px solid var(--primary-red);
-            margin: 30px 0;
-            padding-left: 20px;
-            color: #444;
-        }
-
-        footer {
-            text-align: center;
-            padding: 40px;
-            font-size: 0.8rem;
-            color: #95a5a6;
-        }
-
-        @media (max-width: 600px) {
-            .container { padding: 20px; margin: 10px; }
-            .headline { font-size: 1.8rem; }
-        }
+        body { background: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 20px; }
+        .win-window { background: #d4d0c8; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; color: black; padding: 15px; max-width: 800px; margin: auto; }
+        .header { background: #000080; color: white; padding: 5px; font-weight: bold; margin-bottom: 15px; }
+        
+        /* Search Bar Area */
+        .search-box { margin-bottom: 20px; display: flex; gap: 10px; }
+        input { flex-grow: 1; padding: 5px; border: 2px solid #404040; }
+        button { padding: 5px 15px; background: #d4d0c8; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; }
+        
+        /* Article List Items */
+        .article-link { background: white; border: 1px solid #000; margin-bottom: 10px; padding: 10px; display: block; color: black; text-decoration: none; }
+        .article-link:hover { background: #ffffcc; border: 1px solid #000080; }
+        .article-date { font-size: 0.8rem; color: #666; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="breaking-banner">Exclusive: Domestic Feline News</div>
-        <h1 class="site-title">The Daily Paw</h1>
-    </header>
-
-    <div class="container">
-        <article>
-            <h2 class="headline">Local Icon Nova Spotted in Rare Moment of Stillness; Owner Declan Comments</h2>
-            
-            <div class="meta-info">
-                <span>By A. Journalist</span>
-                <span>April 25, 2026</span>
-            </div>
-
-            <img src="FIELAPHOTOS.png" alt="Nova the Calico Cat" class="article-image">
-            <p class="caption">FILE PHOTO: Nova, a calico of distinct character, gazes directly into the lens during a morning briefing.</p>
-
-            <p><span class="dropcap">N</span>ova, the strikingly patterned calico known for her piercing green eyes and independent spirit, has once again captured the attention of her household. Owned by <strong>Declan</strong>, the feline has reportedly mastered the art of the "stoic stare," a technique experts say is used to demand premium treats or immediate head scratches.</p>
-
-            <blockquote>
-                "She doesn't just live here; she manages the property. I'm essentially just the Chief Operations Officer of Kibble," says Declan.
-            </blockquote>
-
-            <p>The photograph, captured earlier today, shows Nova’s signature black mask and ginger highlights in high definition. Neighbors report that while Nova is often seen patrolling the interior windows, she remains a mysterious figure to those outside her inner circle.</p>
-
-            <h3>The 'Nova' Effect</h3>
-            <p>According to sources close to the family, Declan and Nova have established a routine that revolves around "the 3:00 AM zoomies" and high-stakes negotiation sessions over laser pointer usage. Despite her intense expression in recent photos, Declan maintains that Nova is a "gentle soul" who simply knows her worth.</p>
-
-            <p>As of press time, Nova was reportedly napping on a laptop, effectively halting all local productivity.</p>
-        </article>
+<div class="win-window">
+    <div class="header">THE_DAILY_PAW_ARCHIVE.EXE</div>
+    
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search by headline..." oninput="searchArticles()">
+        <button onclick="searchArticles()">SEARCH</button>
     </div>
 
-    <footer>
-        &copy; 2026 The Daily Paw News Network. All Rights Reserved. No catnip was harmed in the making of this site.
-    </footer>
+    <div id="articleList">
+        <p>Loading database...</p>
+    </div>
+</div>
+
+<script>
+    const _supabase = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_KEY');
+
+    async function searchArticles() {
+        const query = document.getElementById('searchInput').value;
+        const list = document.getElementById('articleList');
+
+        let { data: articles, error } = await _supabase
+            .from('articles')
+            .select('*')
+            .ilike('title', `%${query}%`) // Searches titles
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            list.innerHTML = "<p>Error connecting to Supabase.</p>";
+            return;
+        }
+
+        list.innerHTML = articles.length ? "" : "<p>No articles found.</p>";
+        
+        articles.forEach(art => {
+            const item = document.createElement('a');
+            item.className = 'article-link';
+            item.href = `article_view.html?id=${art.id}`; // You'd build a viewer page later
+            item.innerHTML = `
+                <div class="article-date">${art.date}</div>
+                <strong>${art.title}</strong>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    // Load all articles on start
+    searchArticles();
+</script>
 
 </body>
 </html>
