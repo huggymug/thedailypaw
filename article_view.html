@@ -6,12 +6,17 @@
     <style>
         body { font-family: 'Georgia', serif; line-height: 1.6; color: #2c3e50; margin: 0; padding: 20px; background: #3b3b3b; }
         .win-btn { background: #d4d0c8; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 5px 15px; cursor: pointer; text-decoration: none; color: black; font-family: sans-serif; font-weight: bold; display: inline-block; margin-bottom: 20px; }
+        .win-btn:active { border: 2px solid #404040; border-right: 2px solid #fff; border-bottom: 2px solid #fff; }
         .paper { max-width: 600px; margin: auto; background: white; padding: 40px; border: 1px solid #ccc; box-shadow: 10px 10px 0px #000; }
         h1 { font-size: 2.5rem; border-bottom: 3px solid black; padding-bottom: 10px; margin-top: 0; }
         .meta { font-family: sans-serif; font-size: 0.8rem; text-transform: uppercase; color: #666; margin-bottom: 20px; }
-        img { width: 100%; height: auto; border: 1px solid #000; }
+        img { width: 100%; height: auto; border: 1px solid #000; margin-bottom: 20px; }
         .dropcap { float: left; font-size: 4rem; line-height: 0.8; padding: 4px 8px 0 0; color: #c0392b; }
-        .admin-badge { background: #ff0000; color: white; padding: 4px 8px; font-size: 0.75rem; font-weight: bold; border: 1px solid #000; display: inline-block; margin-bottom: 10px; font-family: sans-serif; }
+        
+        /* Auth & Comment Styles */
+        #comment-auth { background:#eee; padding:15px; border:1px solid #ccc; margin-bottom:10px; font-family:sans-serif; }
+        input, textarea { width: 100%; padding: 8px; border: 2px inset #fff; margin-bottom: 10px; box-sizing: border-box; }
+        .comment-box { border-top: 1px solid #eee; padding: 10px 0; font-family: sans-serif; }
     </style>
 </head>
 <body>
@@ -21,114 +26,120 @@
     </div>
 
     <div id="article-content">
-        <div class="paper"><p>Loading article...</p></div>
+        <div class="paper"><p>Retrieving archive data...</p></div>
     </div>
 
-    <div class="paper" style="margin: 20px auto; max-width: 600px;">
+    <div class="paper" style="margin-top: 20px;">
         <h3>COMMENTS</h3>
-        <div id="comment-list" style="margin-bottom: 20px; border-bottom: 1px solid #ccc;">
-            <p>Loading comments...</p>
+        <div id="comment-list">
+            <p>Loading conversation log...</p>
         </div>
 
-        <div id="comment-auth" style="background:#eee; padding:10px; border:1px solid #ccc; margin-bottom:10px;">
-            <p style="font-family:sans-serif; font-size:0.8rem; margin-top:0;"><b>Sign in to post a reply:</b></p>
-            <input type="email" id="auth-email" placeholder="Email" style="width:48%;">
-            <input type="password" id="auth-pass" placeholder="Password" style="width:48%;">
-            <button class="win-btn" style="width:100%; margin-top:5px;" onclick="commentLogin()">LOGIN</button>
+        <div id="comment-auth">
+            <div id="auth-title" style="font-weight:bold; margin-bottom:10px;">SIGN IN TO COMMENT</div>
+            <input type="email" id="auth-email" placeholder="Email Address">
+            <input type="password" id="auth-pass" placeholder="Password">
+            
+            <div id="login-actions">
+                <button class="win-btn" style="width:100%;" onclick="commentLogin()">LOGIN</button>
+                <p style="font-size:0.7rem; text-align:center;">New member? <a href="#" onclick="toggleAuth(true)">Create Account</a></p>
+            </div>
+
+            <div id="signup-actions" style="display:none;">
+                <button class="win-btn" style="width:100%; background:#3498db; color:white;" onclick="commentSignUp()">REGISTER ACCOUNT</button>
+                <p style="font-size:0.7rem; text-align:center;">Existing user? <a href="#" onclick="toggleAuth(false)">Return to Login</a></p>
+            </div>
         </div>
 
-        <div id="comment-form" style="display:none;">
-            <label>Name:</label>
-            <input type="text" id="comment-user" value="Guest" style="width:100%; margin-bottom:10px;">
-            <label>Comment:</label>
-            <textarea id="comment-body" rows="3" style="width:100%;"></textarea>
-            <button class="win-btn" onclick="postComment()" style="width:100%; margin-top:10px;">POST COMMENT</button>
+        <div id="comment-form" style="display:none; font-family: sans-serif;">
+            <label><b>Posting as:</b></label>
+            <input type="text" id="comment-user" readonly style="background:#eee;">
+            <label><b>Message:</b></label>
+            <textarea id="comment-body" rows="3" placeholder="Type your reply here..."></textarea>
+            <button class="win-btn" onclick="postComment()" style="width:100%;">POST REPLY</button>
         </div>
     </div>
 
 <script>
-    const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
+    // Supabase Configuration
+    const supabaseUrl = 'https://wemdedhwtlirdevkplch.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o';
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
     const urlParams = new URLSearchParams(window.location.search);
     const articleId = urlParams.get('id');
 
-    async function loadArticle() {
-        if (!articleId) return;
-
-        let { data: article, error } = await _supabase
-            .from('articles')
-            .select('*')
-            .eq('id', articleId)
-            .single();
-
-        if (error || !article) {
-            document.getElementById('article-content').innerHTML = "<div class='paper'>Article missing.</div>";
-            return;
-        }
-
-        const adminBadge = article.is_admin_post ? '<div class="admin-badge">ADMINISTRATOR</div>' : '';
-        const firstLetter = article.content.charAt(0);
-        const restOfContent = article.content.substring(1);
-
-        document.getElementById('article-content').innerHTML = `
-            <div class="paper">
-                ${adminBadge}
-                <div class="meta">Published | ${article.date}</div>
-                <h1>${article.title}</h1>
-                <div class="meta">Huggymug Productions News Desk</div>
-                <img src="${article.image_url}" onerror="this.src='https://via.placeholder.com/600x400?text=Image+Unavailable'">
-                <p><span class="dropcap">${firstLetter}</span>${restOfContent}</p>
-            </div>
-        `;
+    function toggleAuth(isSignUp) {
+        document.getElementById('auth-title').innerText = isSignUp ? "CREATE NEW ACCOUNT" : "SIGN IN TO COMMENT";
+        document.getElementById('login-actions').style.display = isSignUp ? 'none' : 'block';
+        document.getElementById('signup-actions').style.display = isSignUp ? 'block' : 'none';
     }
 
-    async function loadComments() {
-        if (!articleId) return;
-        const list = document.getElementById('comment-list');
+    async function commentSignUp() {
+        const email = document.getElementById('auth-email').value;
+        const pass = document.getElementById('auth-pass').value;
+        if (pass.length < 6) return alert("Password must be 6+ characters.");
 
-        let { data: comments, error } = await _supabase
-            .from('comments')
-            .select('*')
-            .eq('article_id', articleId)
-            .order('created_at', { ascending: true });
-
-        if (error) { list.innerHTML = "<p>Error loading comments.</p>"; return; }
-        list.innerHTML = comments.length ? "" : "<p>No comments yet. Be the first!</p>";
-        
-        comments.forEach(c => {
-            const div = document.createElement('div');
-            div.style = "border-top: 1px solid #eee; padding: 10px 0;";
-            div.innerHTML = `<strong>${c.username}</strong>: ${c.body}`;
-            list.appendChild(div);
-        });
+        const { error } = await _supabase.auth.signUp({ email, password: pass });
+        if (error) alert(error.message);
+        else {
+            alert("Account requested! Please log in.");
+            toggleAuth(false);
+        }
     }
 
     async function commentLogin() {
         const email = document.getElementById('auth-email').value;
         const pass = document.getElementById('auth-pass').value;
-        const { error } = await _supabase.auth.signInWithPassword({ email, password: pass });
+        const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
         
-        if (error) alert("Login failed: " + error.message);
+        if (error) alert(error.message);
         else {
             document.getElementById('comment-auth').style.display = 'none';
             document.getElementById('comment-form').style.display = 'block';
+            document.getElementById('comment-user').value = email.split('@')[0];
+        }
+    }
+
+    async function loadArticle() {
+        if (!articleId) return;
+        let { data: article } = await _supabase.from('articles').select('*').eq('id', articleId).single();
+        if (article) {
+            const firstLetter = article.content.charAt(0);
+            const rest = article.content.substring(1);
+            document.getElementById('article-content').innerHTML = `
+                <div class="paper">
+                    <div class="meta">ARCHIVE RECORD | ${article.date}</div>
+                    <h1>${article.title}</h1>
+                    <img src="${article.image_url}" onerror="this.src='https://via.placeholder.com/600x400?text=Image+Not+Found'">
+                    <p><span class="dropcap">${firstLetter}</span>${rest}</p>
+                </div>`;
+        }
+    }
+
+    async function loadComments() {
+        if (!articleId) return;
+        const list = document.getElementById('comment-list');
+        let { data: comments } = await _supabase.from('comments').select('*').eq('article_id', articleId).order('created_at', { ascending: true });
+        list.innerHTML = comments && comments.length ? "" : "<p>No entries found.</p>";
+        if (comments) {
+            comments.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'comment-box';
+                div.innerHTML = `<b>${c.username}</b>: ${c.body}`;
+                list.appendChild(div);
+            });
         }
     }
 
     async function postComment() {
         const user = document.getElementById('comment-user').value;
         const body = document.getElementById('comment-body').value;
-
-        if(!body) return alert("Empty comment!");
-
-        const { error } = await _supabase
-            .from('comments')
-            .insert([{ article_id: articleId, username: user, body: body }]);
-
-        if (error) alert("Failed: " + error.message);
+        const { error } = await _supabase.from('comments').insert([{ article_id: articleId, username: user, body: body }]);
+        if (error) alert(error.message);
         else {
-            document.getElementById('comment-body').value = ""; 
-            loadComments(); 
+            document.getElementById('comment-body').value = "";
+            loadComments();
         }
     }
 
@@ -136,3 +147,4 @@
     loadComments();
 </script>
 </body>
+</html>
