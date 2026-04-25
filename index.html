@@ -31,50 +31,47 @@
 </div>
 
 <script>
-    // FIX: Corrected URL and Variable Placement
-    const supabaseUrl = 'https://wemdedhwtlirdevkplch.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o'; // <--- Use the long key from your dashboard
-    
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseUrl = 'https://wemdedhwtlirdevkplch.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o'; 
+const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    async function searchArticles() {
-        const query = document.getElementById('searchInput').value;
-        const list = document.getElementById('articleList');
+async function searchArticles() {
+    const query = document.getElementById('searchInput').value;
+    const list = document.getElementById('articleList');
 
-        // Check if client initialized
-        if (!_supabase) {
-            list.innerHTML = "<p style='color:red;'>[ERROR] Client not initialized.</p>";
-            return;
-        }
+    // Show a loading state while we wait
+    list.innerHTML = "<p>Searching archives...</p>";
 
-        let { data: articles, error } = await _supabase
-            .from('articles')
-            .select('*')
-            .ilike('title', `%${query}%`)
-            .order('created_at', { ascending: false });
+    let { data: articles, error } = await _supabase
+        .from('articles')
+        .select('*')
+        .ilike('title', `%${query}%`)
+        .order('id', { ascending: false }); // Sort by ID as a fallback
 
-        if (error) {
-            console.error(error);
-            list.innerHTML = `<p style='color:red;'>Error: ${error.message}</p>`;
-            return;
-        }
-
-        list.innerHTML = articles.length ? "" : "<p>No articles found.</p>";
-        
-        articles.forEach(art => {
-            const item = document.createElement('a');
-            item.className = 'article-link';
-            item.href = `article_view.html?id=${art.id}`;
-            item.innerHTML = `
-                <div class="article-date">${art.date}</div>
-                <strong>${art.title}</strong>
-            `;
-            list.appendChild(item);
-        });
+    if (error) {
+        list.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+        return;
     }
 
-    // Run search immediately on load to show all articles
-    window.onload = searchArticles;
+    if (articles.length === 0) {
+        list.innerHTML = "<p>No articles found. Try a different search or publish a new story!</p>";
+        return;
+    }
+
+    list.innerHTML = "";
+    articles.forEach(art => {
+        const item = document.createElement('a');
+        item.className = 'article-link';
+        item.href = `article_view.html?id=${art.id}`;
+        item.innerHTML = `
+            <div class="article-date">${art.date || 'Date Unknown'}</div>
+            <strong>${art.title}</strong>
+        `;
+        list.appendChild(item);
+    });
+}
+
+window.onload = searchArticles;
 </script>
 
 </body>
