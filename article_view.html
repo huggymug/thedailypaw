@@ -1,158 +1,117 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="manifest" href="manifest.json">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="The Daily Paw">
-
-<link rel="apple-touch-icon" href="your-icon-file.png">
-    <title>The Daily Paw | View Article</title>
+    <title>The Daily Paw | View</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Georgia', serif; line-height: 1.6; color: #2c3e50; margin: 0; padding: 20px; background: #3b3b3b; }
-        .win-btn { background: #d4d0c8; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 5px 15px; cursor: pointer; text-decoration: none; color: black; font-family: sans-serif; font-weight: bold; display: inline-block; margin-bottom: 20px; }
-        .win-btn:active { border: 2px solid #404040; border-right: 2px solid #fff; border-bottom: 2px solid #fff; }
-        .paper { max-width: 600px; margin: auto; background: white; padding: 40px; border: 1px solid #ccc; box-shadow: 10px 10px 0px #000; }
-        h1 { font-size: 2.5rem; border-bottom: 3px solid black; padding-bottom: 10px; margin-top: 0; }
-        .meta { font-family: sans-serif; font-size: 0.8rem; text-transform: uppercase; color: #666; margin-bottom: 20px; }
-        img { width: 100%; height: auto; border: 1px solid #000; margin-bottom: 20px; }
-        .dropcap { float: left; font-size: 4rem; line-height: 0.8; padding: 4px 8px 0 0; color: #c0392b; }
-        
-        /* Auth & Comment Styles */
-        #comment-auth { background:#eee; padding:15px; border:1px solid #ccc; margin-bottom:10px; font-family:sans-serif; }
-        input, textarea { width: 100%; padding: 8px; border: 2px inset #fff; margin-bottom: 10px; box-sizing: border-box; }
-        .comment-box { border-top: 1px solid #eee; padding: 10px 0; font-family: sans-serif; }
+        body { font-family: 'Georgia', serif; background: #3b3b3b; margin: 0; padding: 20px; color: #2c3e50; }
+        .win-btn { background: #d4d0c8; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 8px 15px; cursor: pointer; font-weight: bold; font-family: sans-serif; text-decoration: none; color: black; display: inline-block; }
+        .paper { max-width: 600px; margin: auto; background: white; padding: 30px; border: 1px solid #ccc; box-shadow: 10px 10px 0px #000; }
+        h1 { border-bottom: 3px solid black; padding-bottom: 10px; margin-top: 0; }
+        img { width: 100%; border: 1px solid #000; margin-bottom: 15px; }
+        #auth-box { background: #eee; padding: 15px; border: 1px solid #ccc; margin-top: 20px; font-family: sans-serif; }
+        input, textarea { width: 100%; padding: 8px; margin-bottom: 10px; border: 2px inset #fff; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-    <div style="max-width: 600px; margin: auto;">
-        <a href="index.html" class="win-btn">< BACK TO ARCHIVE</a>
+    <div style="max-width: 600px; margin: auto; margin-bottom: 15px;">
+        <a href="index.html" class="win-btn">< BACK</a>
     </div>
 
     <div id="article-content">
-        <div class="paper"><p>Retrieving archive data...</p></div>
+        <div class="paper">Loading article...</div>
     </div>
 
     <div class="paper" style="margin-top: 20px;">
-        <h3>COMMENTS</h3>
-        <div id="comment-list">
-            <p>Loading conversation log...</p>
-        </div>
+        <h3 style="font-family: sans-serif;">COMMENTS</h3>
+        <div id="comment-list" style="font-family: sans-serif;"></div>
 
-        <div id="comment-auth">
-            <div id="auth-title" style="font-weight:bold; margin-bottom:10px;">SIGN IN TO COMMENT</div>
-            <input type="email" id="auth-email" placeholder="Email Address">
-            <input type="password" id="auth-pass" placeholder="Password">
-            
-            <div id="login-actions">
-                <button class="win-btn" style="width:100%;" onclick="commentLogin()">LOGIN</button>
-                <p style="font-size:0.7rem; text-align:center;">New member? <a href="#" onclick="toggleAuth(true)">Create Account</a></p>
+        <div id="auth-box">
+            <div id="auth-title"><b>SIGN IN TO COMMENT</b></div>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="pass" placeholder="Password">
+            <div id="login-tools">
+                <button class="win-btn" style="width:100%;" onclick="handleAuth('login')">LOGIN</button>
+                <p style="font-size:0.7rem; text-align:center;">No account? <a href="#" onclick="toggleAuth(true)">Sign Up</a></p>
             </div>
-
-            <div id="signup-actions" style="display:none;">
-                <button class="win-btn" style="width:100%; background:#3498db; color:white;" onclick="commentSignUp()">REGISTER ACCOUNT</button>
-                <p style="font-size:0.7rem; text-align:center;">Existing user? <a href="#" onclick="toggleAuth(false)">Return to Login</a></p>
+            <div id="signup-tools" style="display:none;">
+                <button class="win-btn" style="width:100%; background:#3498db; color:white;" onclick="handleAuth('signup')">CREATE ACCOUNT</button>
+                <p style="font-size:0.7rem; text-align:center;"><a href="#" onclick="toggleAuth(false)">Back to Login</a></p>
             </div>
         </div>
 
         <div id="comment-form" style="display:none; font-family: sans-serif;">
-            <label><b>Posting as:</b></label>
-            <input type="text" id="comment-user" readonly style="background:#eee;">
-            <label><b>Message:</b></label>
-            <textarea id="comment-body" rows="3" placeholder="Type your reply here..."></textarea>
-            <button class="win-btn" onclick="postComment()" style="width:100%;">POST REPLY</button>
+            <input type="text" id="c-user" readonly style="background:#ddd;">
+            <textarea id="c-body" rows="3" placeholder="Write a reply..."></textarea>
+            <button class="win-btn" style="width:100%;" onclick="postComment()">POST REPLY</button>
         </div>
     </div>
 
 <script>
-    // Supabase Configuration
-    const supabaseUrl = 'https://wemdedhwtlirdevkplch.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o';
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const articleId = urlParams.get('id');
+    const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
+    const artId = new URLSearchParams(window.location.search).get('id');
 
     function toggleAuth(isSignUp) {
-        document.getElementById('auth-title').innerText = isSignUp ? "CREATE NEW ACCOUNT" : "SIGN IN TO COMMENT";
-        document.getElementById('login-actions').style.display = isSignUp ? 'none' : 'block';
-        document.getElementById('signup-actions').style.display = isSignUp ? 'block' : 'none';
+        document.getElementById('auth-title').innerHTML = isSignUp ? "<b>CREATE ACCOUNT</b>" : "<b>SIGN IN TO COMMENT</b>";
+        document.getElementById('login-tools').style.display = isSignUp ? 'none' : 'block';
+        document.getElementById('signup-tools').style.display = isSignUp ? 'block' : 'none';
     }
 
-    async function commentSignUp() {
-        const email = document.getElementById('auth-email').value;
-        const pass = document.getElementById('auth-pass').value;
-        if (pass.length < 6) return alert("Password must be 6+ characters.");
+    async function handleAuth(type) {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('pass').value;
+        const { data, error } = type === 'login' ? 
+            await _supabase.auth.signInWithPassword({ email, password }) : 
+            await _supabase.auth.signUp({ email, password });
 
-        const { error } = await _supabase.auth.signUp({ email, password: pass });
         if (error) alert(error.message);
-        else {
-            alert("Account requested! Please log in.");
-            toggleAuth(false);
-        }
-    }
-
-    async function commentLogin() {
-        const email = document.getElementById('auth-email').value;
-        const pass = document.getElementById('auth-pass').value;
-        const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
-        
-        if (error) alert(error.message);
-        else {
-            document.getElementById('comment-auth').style.display = 'none';
+        else if (type === 'login') {
+            document.getElementById('auth-box').style.display = 'none';
             document.getElementById('comment-form').style.display = 'block';
-            document.getElementById('comment-user').value = email.split('@')[0];
-        }
+            document.getElementById('c-user').value = email.split('@')[0];
+        } else alert("Account created! You can now log in.");
     }
 
     async function loadArticle() {
-        if (!articleId) return;
-        let { data: article } = await _supabase.from('articles').select('*').eq('id', articleId).single();
-        if (article) {
-            const firstLetter = article.content.charAt(0);
-            const rest = article.content.substring(1);
+        if (!artId) return;
+        let { data: art } = await _supabase.from('articles').select('*').eq('id', artId).single();
+        if (art) {
             document.getElementById('article-content').innerHTML = `
                 <div class="paper">
-                    <div class="meta">ARCHIVE RECORD | ${article.date}</div>
-                    <h1>${article.title}</h1>
-                    <img src="${article.image_url}" onerror="this.src='https://via.placeholder.com/600x400?text=Image+Not+Found'">
-                    <p><span class="dropcap">${firstLetter}</span>${rest}</p>
+                    <small>${art.date}</small>
+                    <h1>${art.title}</h1>
+                    <img src="${art.image_url}">
+                    <p style="white-space: pre-wrap;">${art.content}</p>
                 </div>`;
         }
+        loadComments();
     }
 
     async function loadComments() {
-        if (!articleId) return;
         const list = document.getElementById('comment-list');
-        let { data: comments } = await _supabase.from('comments').select('*').eq('article_id', articleId).order('created_at', { ascending: true });
-        list.innerHTML = comments && comments.length ? "" : "<p>No entries found.</p>";
-        if (comments) {
-            comments.forEach(c => {
-                const div = document.createElement('div');
-                div.className = 'comment-box';
-                div.innerHTML = `<b>${c.username}</b>: ${c.body}`;
-                list.appendChild(div);
-            });
-        }
+        let { data: comms } = await _supabase.from('comments').select('*').eq('article_id', artId).order('created_at', { ascending: true });
+        list.innerHTML = comms && comms.length ? "" : "<p>No entries yet.</p>";
+        if(comms) comms.forEach(c => {
+            const d = document.createElement('div');
+            d.style = "border-top:1px solid #eee; padding:10px 0;";
+            d.innerHTML = `<b>${c.username}</b>: ${c.body}`;
+            list.appendChild(d);
+        });
     }
 
     async function postComment() {
-        const user = document.getElementById('comment-user').value;
-        const body = document.getElementById('comment-body').value;
-        const { error } = await _supabase.from('comments').insert([{ article_id: articleId, username: user, body: body }]);
-        if (error) alert(error.message);
-        else {
-            document.getElementById('comment-body').value = "";
-            loadComments();
-        }
+        const user = document.getElementById('c-user').value;
+        const body = document.getElementById('c-body').value;
+        const { error } = await _supabase.from('comments').insert([{ article_id: artId, username: user, body: body }]);
+        if (!error) { document.getElementById('c-body').value = ""; loadComments(); }
     }
 
     loadArticle();
-    loadComments();
 </script>
 </body>
 </html>

@@ -1,92 +1,53 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="manifest" href="manifest.json">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="The Daily Paw">
-
-<link rel="apple-touch-icon" href="your-icon-file.png">
     <title>The Daily Paw | Archive</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Daily Paw">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #3b3b3b; color: white; font-family: "Segoe UI", Arial, sans-serif; margin: 0; padding: 20px; }
-        .win-window { background: #d4d0c8; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; color: black; padding: 15px; max-width: 800px; margin: auto; box-shadow: 5px 5px 15px rgba(0,0,0,0.5); }
-        .header { background: #000080; color: white; padding: 5px; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: space-between; font-size: 0.8rem; }
+        body { background: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 0; padding: 20px; }
+        .win-window { background: #d4d0c8; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; color: black; padding: 15px; max-width: 800px; margin: auto; }
+        .header { background: #000080; color: white; padding: 5px; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: space-between; }
         .search-box { margin-bottom: 20px; display: flex; gap: 10px; }
-        input { flex-grow: 1; padding: 5px; border: 2px inset #fff; font-family: monospace; }
-        .win-btn { padding: 5px 15px; background: #d4d0c8; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; font-family: sans-serif; }
-        .win-btn:active { border: 2px solid #404040; border-right: 2px solid #fff; border-bottom: 2px solid #fff; }
+        input { flex-grow: 1; padding: 5px; border: 2px inset #fff; }
+        .win-btn { padding: 5px 15px; background: #d4d0c8; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; }
         .article-link { background: white; border: 1px solid #000; margin-bottom: 10px; padding: 10px; display: block; color: black; text-decoration: none; }
-        .article-link:hover { background: #ffffcc; outline: 1px solid #000080; }
-        .article-date { font-size: 0.75rem; color: #666; text-transform: uppercase; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="win-window">
-    <div class="header">
-        <span>[ THE_DAILY_PAW_ARCHIVE.EXE ]</span>
-        <span>X</span>
-    </div>
-    
+    <div class="header"><span>[ DAILY_PAW_ARCHIVE.EXE ]</span><span>X</span></div>
     <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search archive headlines..." oninput="searchArticles()">
+        <input type="text" id="searchInput" placeholder="Search archive..." oninput="searchArticles()">
         <button class="win-btn" onclick="searchArticles()">FIND</button>
     </div>
-
-    <div id="articleList">
-        <p style="text-align:center; padding: 20px;">Scanning database for records...</p>
-    </div>
+    <div id="articleList"><p style="text-align:center;">Scanning database...</p></div>
 </div>
 
 <script>
-    // Initializing with the verified long key from your article_view file
-    const supabaseUrl = 'https://wemdedhwtlirdevkplch.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o';
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
 
     async function searchArticles() {
         const query = document.getElementById('searchInput').value;
         const list = document.getElementById('articleList');
-
-        let { data: articles, error } = await _supabase
-            .from('articles')
-            .select('*')
-            .ilike('title', `%${query}%`)
-            .order('id', { ascending: false });
-
-        if (error) {
-            console.error("Supabase Error:", error);
-            list.innerHTML = "<p style='color:red; text-align:center;'>FATAL ERROR: Could not access database.</p>";
-            return;
+        let { data: articles } = await _supabase.from('articles').select('*').ilike('title', `%${query}%`).order('id', { ascending: false });
+        
+        list.innerHTML = articles && articles.length ? "" : "<p>No records found.</p>";
+        if(articles) {
+            articles.forEach(art => {
+                const item = document.createElement('a');
+                item.className = 'article-link';
+                item.href = `article_view.html?id=${art.id}`;
+                item.innerHTML = `<small>${art.date}</small><br><strong>${art.title}</strong>`;
+                list.appendChild(item);
+            });
         }
-
-        if (articles.length === 0) {
-            list.innerHTML = "<p style='text-align:center; padding: 20px;'>No records found for this query.</p>";
-            return;
-        }
-
-        list.innerHTML = "";
-        articles.forEach(art => {
-            const item = document.createElement('a');
-            item.className = 'article-link';
-            item.href = `article_view.html?id=${art.id}`;
-            
-            // Checking for admin status to add a small indicator in the list
-            const adminTag = art.is_admin_post ? " <span style='color:red; font-size:10px;'>[ADMIN]</span>" : "";
-            
-            item.innerHTML = `
-                <div class="article-date">${art.date || 'UNSPECIFIED DATE'}</div>
-                <strong>${art.title}${adminTag}</strong>
-            `;
-            list.appendChild(item);
-        });
     }
-
-    // Load initial list on page startup
     searchArticles();
 </script>
 </body>
