@@ -123,6 +123,12 @@
 </div>
 
 <script>
+    // Replace the text inside the ' ' with your actual data from Supabase
+    const supabaseUrl = 'https://wemdedhwtlirdevkplch.supabase.co'; 
+    const supabaseKey = 'https://wemdedhwtlirdevkplch.supabase.co/rest/v1/';
+
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    
     // Formatting Logic
     function formatText(tag) {
         const area = document.getElementById('bodyText');
