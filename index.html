@@ -35,11 +35,7 @@
 </div>
 
 <script>
-    // Replace the text inside the ' ' with your actual data from Supabase
-    const supabaseUrl = 'https://wemdedhwtlirdevkplch.supabase.co'; 
-    const supabaseKey = 'sb_publishable_8g3mozQ6ouUMEKZkVMvfFA_K9f__5vL';
-
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co/rest/v1/', 'wemdedhwtlirdevkplch');
 
     async function searchArticles() {
         const query = document.getElementById('searchInput').value;
