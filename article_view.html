@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>The Daily Paw | View Article</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Georgia', serif; line-height: 1.6; color: #2c3e50; margin: 0; padding: 20px; background: #3b3b3b; }
+        .win-btn { background: #d4d0c8; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 5px 15px; cursor: pointer; text-decoration: none; color: black; font-family: sans-serif; font-weight: bold; display: inline-block; margin-bottom: 20px; }
+        .paper { max-width: 600px; margin: auto; background: white; padding: 40px; border: 1px solid #ccc; box-shadow: 10px 10px 0px #000; }
+        h1 { font-size: 2.5rem; border-bottom: 3px solid black; padding-bottom: 10px; margin-top: 0; }
+        .meta { font-family: sans-serif; font-size: 0.8rem; text-transform: uppercase; color: #666; margin-bottom: 20px; }
+        img { width: 100%; height: auto; border: 1px solid #000; }
+        .dropcap { float: left; font-size: 4rem; line-height: 0.8; padding: 4px 8px 0 0; color: #c0392b; }
+    </style>
+</head>
+<body>
+
+    <div style="max-width: 600px; margin: auto;">
+        <a href="index.html" class="win-btn">< BACK TO ARCHIVE</a>
+    </div>
+
+    <div id="article-content">
+        <div class="paper"><p>Loading article...</p></div>
+    </div>
+
+<script>
+    // USE YOUR ACTUAL URL AND ANON KEY HERE
+    const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
+
+    async function loadArticle() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const articleId = urlParams.get('id');
+
+        if (!articleId) {
+            document.getElementById('article-content').innerHTML = "<div class='paper'>No article ID found.</div>";
+            return;
+        }
+
+        let { data: article, error } = await _supabase
+            .from('articles')
+            .select('*')
+            .eq('id', articleId)
+            .single();
+
+        if (error || !article) {
+            document.getElementById('article-content').innerHTML = "<div class='paper'>Article not found.</div>";
+            return;
+        }
+
+        // Render the content
+        const firstLetter = article.content.charAt(0);
+        const restOfContent = article.content.substring(1);
+
+        document.getElementById('article-content').innerHTML = `
+            <div class="paper">
+                <div class="meta">Published | ${article.date}</div>
+                <h1>${article.title}</h1>
+                <div class="meta">Huggymug Productions News Desk</div>
+                <img src="${article.image_url}">
+                <p><span class="dropcap">${firstLetter}</span>${restOfContent}</p>
+            </div>
+        `;
+    }
+
+    loadArticle();
+</script>
+
+</body>
+</html>
