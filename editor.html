@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Huggymug Productions | Professional News Editor</title>
+    <style>
+        :root {
+            --win-gray: #d4d0c8;
+            --win-blue: #000080;
+            --accent: #c0392b;
+        }
+
+        body {
+            background-color: #3b3b3b;
+            color: white;
+            font-family: "Segoe UI", Arial, sans-serif;
+            margin: 20px;
+            display: grid;
+            grid-template-columns: 450px 1fr;
+            gap: 20px;
+        }
+
+        #editor {
+            background: var(--win-gray);
+            color: black;
+            padding: 15px;
+            border: 2px solid #fff;
+            border-right: 2px solid #404040;
+            border-bottom: 2px solid #404040;
+            height: fit-content;
+        }
+
+        h2 { margin-top: 0; font-size: 1.1rem; background: var(--win-blue); color: white; padding: 5px; text-align: center; }
+
+        .field { margin-bottom: 12px; }
+        label { display: block; font-weight: bold; font-size: 0.85rem; margin-bottom: 3px; }
+        
+        input { width: 94%; padding: 4px; border: 2px solid #404040; background: white; font-family: "Courier New", monospace; }
+
+        /* Toolbar Styles */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            background: #808080;
+            padding: 2px;
+            border: 1px solid #404040;
+            margin-bottom: 2px;
+        }
+
+        .tool-btn {
+            padding: 2px 8px;
+            background: var(--win-gray);
+            border: 1px solid #fff;
+            border-right: 1px solid #404040;
+            border-bottom: 1px solid #404040;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .tool-btn:active {
+            border: 1px solid #404040;
+            border-right: 1px solid #fff;
+            border-bottom: 1px solid #fff;
+        }
+
+        textarea {
+            width: 94%;
+            padding: 4px;
+            border: 2px solid #404040;
+            background: white;
+            font-family: "Courier New", monospace;
+            white-space: pre-wrap;
+        }
+
+        .export-btn {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background: var(--win-gray);
+            border: 2px solid #fff;
+            border-right: 2px solid #404040;
+            border-bottom: 2px solid #404040;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+<div id="editor">
+    <h2>[ HUGGYMUG_NEWS_EDITOR.EXE ]</h2>
+    
+    <div class="field">
+        <label>Date of Report:</label>
+        <input type="text" id="reportDate" value="April 25, 2026" oninput="updatePreview()">
+    </div>
+
+    <div class="field">
+        <label>Headline:</label>
+        <input type="text" id="headline" value="Local Icon Nova Spotted in Rare Moment of Stillness" oninput="updatePreview()">
+    </div>
+
+    <div class="field">
+        <label>Article Content Editor:</label>
+        <div class="toolbar">
+            <button class="tool-btn" onclick="formatText('b')">B</button>
+            <button class="tool-btn" onclick="formatText('i')">I</button>
+            <button class="tool-btn" onclick="formatText('s')">S</button>
+            <button class="tool-btn" onclick="insertTag('<br>')">New Line</button>
+            <button class="tool-btn" onclick="insertTag('&nbsp;&nbsp;&nbsp;&nbsp;')">Tab</button>
+        </div>
+        <textarea id="bodyText" rows="15" oninput="updatePreview()">Nova, the strikingly patterned calico known for her piercing green eyes and independent spirit, has once again captured the attention of her household. As of press time, she was reportedly napping on a laptop, effectively halting all local productivity.</textarea>
+    </div>
+
+    <button class="export-btn" onclick="downloadHTML()">💾 EXPORT FORMATTED ARTICLE</button>
+</div>
+
+<div id="preview-container" style="background:#808080; padding:20px; border:2px solid #000; overflow-y:auto;">
+    <iframe id="preview" style="width:100%; height:90vh; background:white; border:none;"></iframe>
+</div>
+
+<script>
+    // Formatting Logic
+    function formatText(tag) {
+        const area = document.getElementById('bodyText');
+        const start = area.selectionStart;
+        const end = area.selectionEnd;
+        const text = area.value;
+        const selected = text.substring(start, end);
+        
+        area.value = text.substring(0, start) + `<${tag}>` + selected + `</${tag}>` + text.substring(end);
+        updatePreview();
+    }
+
+    function insertTag(tag) {
+        const area = document.getElementById('bodyText');
+        const start = area.selectionStart;
+        const end = area.selectionEnd;
+        area.value = area.value.substring(0, start) + tag + area.value.substring(end);
+        updatePreview();
+    }
+
+    function generateCode() {
+        const date = document.getElementById('reportDate').value;
+        const head = document.getElementById('headline').value;
+        const body = document.getElementById('bodyText').value;
+
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root { --primary-red: #c0392b; }
+        body { font-family: 'Georgia', serif; line-height: 1.6; color: #2c3e50; background: #f4f7f6; margin: 0; padding: 0; }
+        header { background: white; border-bottom: 4px solid #000; padding: 20px 0; text-align: center; }
+        .site-title { font-size: 3rem; text-transform: uppercase; font-weight: 900; margin: 0; }
+        .container { max-width: 700px; margin: 40px auto; background: white; padding: 40px; border: 1px solid #ccc; box-shadow: 10px 10px 0px #000; }
+        .meta-info { font-family: Arial; font-size: 0.8rem; color: #7f8c8d; margin-bottom: 25px; display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 10px;}
+        .dropcap { float: left; font-size: 4rem; line-height: 0.8; padding: 4px 8px 0 0; color: var(--primary-red); }
+        footer { text-align: center; padding: 20px; font-size: 0.8rem; color: #95a5a6; background: #fff; margin-top: 40px; }
+    </style>
+</head>
+<body>
+    <header><h1 class="site-title">The Daily Paw</h1></header>
+    <div class="container">
+        <div class="meta-info"><span>Official Report</span><span>${date}</span></div>
+        <h1>${head}</h1>
+        <img src="FIELAPHOTOS.png" style="width:100%; border:1px solid #000;">
+        <p><span class="dropcap">${body.charAt(0)}</span>${body.substring(1)}</p>
+    </div>
+    <footer>&copy; 2026 Huggymug Productions</footer>
+</body>
+</html>`;
+    }
+
+    function updatePreview() {
+        document.getElementById('preview').srcdoc = generateCode();
+    }
+
+    function downloadHTML() {
+const supabaseUrl = 'YOUR_SUPABASE_URL';
+const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+async function publishArticle() {
+    const { data, error } = await supabase
+      .from('articles')
+      .insert([
+        { 
+          title: document.getElementById('headline').value,
+          content: document.getElementById('bodyText').value,
+          date: document.getElementById('reportDate').value,
+          image_url: "FIELAPHOTOS.png"
+        }
+      ]);
+
+    if (error) alert("Error saving: " + error.message);
+    else alert("Article Published to The Daily Paw!");
+}
+
+    updatePreview();
+</script>
+
+</body>
+</html>
