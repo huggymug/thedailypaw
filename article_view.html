@@ -6,11 +6,17 @@
     <style>
         body { font-family: 'Georgia', serif; line-height: 1.6; color: #2c3e50; margin: 0; padding: 20px; background: #3b3b3b; }
         .win-btn { background: #d4d0c8; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 5px 15px; cursor: pointer; text-decoration: none; color: black; font-family: sans-serif; font-weight: bold; display: inline-block; margin-bottom: 20px; }
+        .win-btn:active { border: 2px solid #404040; border-right: 2px solid #fff; border-bottom: 2px solid #fff; }
         .paper { max-width: 600px; margin: auto; background: white; padding: 40px; border: 1px solid #ccc; box-shadow: 10px 10px 0px #000; }
         h1 { font-size: 2.5rem; border-bottom: 3px solid black; padding-bottom: 10px; margin-top: 0; }
         .meta { font-family: sans-serif; font-size: 0.8rem; text-transform: uppercase; color: #666; margin-bottom: 20px; }
         img { width: 100%; height: auto; border: 1px solid #000; }
         .dropcap { float: left; font-size: 4rem; line-height: 0.8; padding: 4px 8px 0 0; color: #c0392b; }
+        
+        /* Comment Section Styling */
+        #comment-section { margin-top: 20px; padding: 20px; }
+        .comment-item { border-top: 1px solid #eee; padding: 10px 0; font-family: sans-serif; font-size: 0.9rem; }
+        .comment-input { width: 100%; padding: 8px; border: 2px solid #404040; margin-bottom: 10px; font-family: sans-serif; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -21,79 +27,38 @@
 
     <div id="article-content">
         <div class="paper"><p>Loading article...</p></div>
-        <div class="paper" style="margin-top: 20px;">
-            <h3>COMMENTS</h3>
-            <div id="comment-list" style="margin-bottom: 20px; border-bottom: 1px solid #ccc;">
-                <p>Loading comments...</p>
-            </div>
-
-    <div class="field">
-        <label>Name:</label>
-        <input type="text" id="comment-user" value="Guest" style="width:100%; margin-bottom:10px;">
-        <label>Comment:</label>
-        <textarea id="comment-body" rows="3" style="width:100%;"></textarea>
-        <button class="win-btn" onclick="postComment()" style="width:100%; margin-top:10px;">POST COMMENT</button>
     </div>
-</div>
+
+    <div id="comment-section" class="paper">
+        <h3 style="border-bottom: 2px solid black;">COMMENTS</h3>
+        <div id="comment-list">
+            <p>Loading comments...</p>
+        </div>
+
+        <hr style="margin: 20px 0;">
+        
+        <div class="comment-form">
+            <label style="font-family: sans-serif; font-weight: bold; font-size: 0.8rem;">NAME:</label>
+            <input type="text" id="comment-user" class="comment-input" value="Guest">
+            
+            <label style="font-family: sans-serif; font-weight: bold; font-size: 0.8rem;">MESSAGE:</label>
+            <textarea id="comment-body" class="comment-input" rows="3" placeholder="Write a comment..."></textarea>
+            
+            <button class="win-btn" style="width: 100%;" onclick="postComment()">POST COMMENT</button>
+        </div>
     </div>
 
 <script>
-async function loadComments() {
+    // INITIALIZE SUPABASE
+    const supabaseUrl = 'https://wemdedhwtlirdevkplch.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o';
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    // Get the Article ID from the URL (?id=...)
     const urlParams = new URLSearchParams(window.location.search);
     const articleId = urlParams.get('id');
-    const list = document.getElementById('comment-list');
-
-    let { data: comments, error } = await _supabase
-        .from('comments')
-        .select('*')
-        .eq('article_id', articleId)
-        .order('created_at', { ascending: true });
-
-    if (error) {
-        list.innerHTML = "<p>Error loading comments.</p>";
-        return;
-    }
-
-    list.innerHTML = comments.length ? "" : "<p>No comments yet. Be the first!</p>";
-    
-    comments.forEach(c => {
-        const div = document.createElement('div');
-        div.style = "border-top: 1px solid #eee; padding: 10px 0;";
-        div.innerHTML = `<strong>${c.username}</strong>: ${c.body}`;
-        list.appendChild(div);
-    });
-}
-
-async function postComment() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const articleId = urlParams.get('id');
-    const user = document.getElementById('comment-user').value;
-    const body = document.getElementById('comment-body').value;
-
-    if(!body) return alert("You can't post an empty comment!");
-
-    const { error } = await _supabase
-        .from('comments')
-        .insert([{ article_id: articleId, username: user, body: body }]);
-
-    if (error) {
-        alert("Failed to post: " + error.message);
-    } else {
-        document.getElementById('comment-body').value = ""; // Clear box
-        loadComments(); // Refresh list
-    }
-}
-
-// Update your existing loadArticle to also call loadComments()
-// Or just add this line at the very bottom of your script:
-loadComments();
-    // USE YOUR ACTUAL URL AND ANON KEY HERE
-    const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
 
     async function loadArticle() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const articleId = urlParams.get('id');
-
         if (!articleId) {
             document.getElementById('article-content').innerHTML = "<div class='paper'>No article ID found.</div>";
             return;
@@ -110,7 +75,7 @@ loadComments();
             return;
         }
 
-        // Render the content
+        // Apply dropcap to content
         const firstLetter = article.content.charAt(0);
         const restOfContent = article.content.substring(1);
 
@@ -119,13 +84,58 @@ loadComments();
                 <div class="meta">Published | ${article.date}</div>
                 <h1>${article.title}</h1>
                 <div class="meta">Huggymug Productions News Desk</div>
-                <img src="${article.image_url}">
+                <img src="${article.image_url}" onerror="this.src='https://via.placeholder.com/600x400?text=Image+Not+Found'">
                 <p><span class="dropcap">${firstLetter}</span>${restOfContent}</p>
             </div>
         `;
     }
 
+    async function loadComments() {
+        if (!articleId) return;
+        const list = document.getElementById('comment-list');
+
+        let { data: comments, error } = await _supabase
+            .from('comments')
+            .select('*')
+            .eq('article_id', articleId)
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            list.innerHTML = "<p>Error loading comments.</p>";
+            return;
+        }
+
+        list.innerHTML = comments.length ? "" : "<p>No comments yet. Be the first!</p>";
+        
+        comments.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'comment-item';
+            div.innerHTML = `<strong>${c.username}</strong>: ${c.body}`;
+            list.appendChild(div);
+        });
+    }
+
+    async function postComment() {
+        const user = document.getElementById('comment-user').value;
+        const body = document.getElementById('comment-body').value;
+
+        if(!body) return alert("You can't post an empty comment!");
+
+        const { error } = await _supabase
+            .from('comments')
+            .insert([{ article_id: articleId, username: user, body: body }]);
+
+        if (error) {
+            alert("Failed to post: " + error.message);
+        } else {
+            document.getElementById('comment-body').value = ""; // Clear the box
+            loadComments(); // Refresh the list
+        }
+    }
+
+    // Start everything
     loadArticle();
+    loadComments();
 </script>
 
 </body>
