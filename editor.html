@@ -1,50 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Huggymug Productions | News Editor v9</title>
+<link rel="manifest" href="manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="The Daily Paw">
+
+<link rel="apple-touch-icon" href="your-icon-file.png">
+    <title>Huggymug Productions | News Editor v7</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --win-gray: #d4d0c8; --win-blue: #000080; }
         body { background-color: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 20px; display: grid; grid-template-columns: 450px 1fr; gap: 20px; }
         #editor { background: var(--win-gray); color: black; padding: 15px; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; height: fit-content; }
-        .win-title { background: var(--win-blue); color: white; padding: 5px; font-weight: bold; display: flex; justify-content: space-between; font-size: 0.8rem; }
+        .win-title { background: var(--win-blue); color: white; padding: 5px; font-weight: bold; display: flex; justify-content: space-between; }
         .field { margin-bottom: 12px; }
-        label { display: block; font-weight: bold; font-size: 0.85rem; margin-bottom: 2px; }
-        input, textarea { width: 95%; padding: 4px; border: 2px inset #fff; background: white; font-family: "Courier New", monospace; }
+        label { display: block; font-weight: bold; font-size: 0.85rem; cursor: pointer; }
+        input, textarea { width: 94%; padding: 4px; border: 2px solid #404040; background: white; font-family: "Courier New", monospace; }
+        .toolbar { display: flex; gap: 2px; background: #808080; padding: 2px; border: 1px solid #404040; }
+        .tool-btn { padding: 2px 8px; background: var(--win-gray); border: 1px solid #fff; border-right: 1px solid #404040; border-bottom: 1px solid #404040; cursor: pointer; font-weight: bold; }
         .export-btn { width: 100%; padding: 10px; margin-top: 5px; background: #2ecc71; color: white; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; }
-        #debug-log { background: black; color: #00ff00; font-family: monospace; font-size: 0.75rem; padding: 10px; margin-top: 10px; height: 80px; overflow-y: auto; border: 2px inset #fff; }
+        #debug-log { background: black; color: #00ff00; font-family: monospace; font-size: 0.75rem; padding: 10px; margin-top: 10px; height: 60px; overflow-y: auto; border: 2px inset #fff; }
     </style>
 </head>
 <body>
 
 <div id="editor">
     <div class="win-title">
-        <span>[ HUGGYMUG_ADMIN_CONSOLE.EXE ]</span>
-        <span style="color: #00ff00;">[ UNLOCKED ]</span>
+        <span>[ HUGGYMUG_NEWS_EDITOR.EXE ]</span>
+        <span id="dbStatus" style="color: #ffff00;">[ CONNECTING... ]</span>
     </div>
     
     <div class="field" style="margin-top:10px;">
-        <label>Date of Report:</label>
+        <label for="reportDate">Date of Report:</label>
         <input type="text" id="reportDate" value="April 25, 2026">
     </div>
 
     <div class="field">
-        <label>Article Headline:</label>
-        <input type="text" id="headline" placeholder="Headline...">
+        <label for="headline">Article Headline:</label>
+        <input type="text" id="headline" value="Replace Me">
     </div>
 
     <div class="field">
-        <label>Image Filename:</label>
-        <input type="text" id="imgSrc" placeholder="icon.png">
+        <label for="imgSrc">Image Filename:</label>
+        <input type="text" id="imgSrc" value="replaceme.png">
     </div>
 
     <div class="field">
-        <label>Article Content:</label>
-        <textarea id="bodyText" rows="10" oninput="updatePreview()"></textarea>
+        <label for="bodyText">Article Content:</label>
+        <div class="toolbar">
+            <button class="tool-btn" onclick="formatText('b')">B</button>
+            <button class="tool-btn" onclick="formatText('i')">I</button>
+            <button class="tool-btn" onclick="formatText('s')">S</button>
+            <button class="tool-btn" onclick="insertTag('<br>')">Line</button>
+        </div>
+        <textarea id="bodyText" rows="10">Replace me!</textarea>
     </div>
 
-    <button class="export-btn" onclick="publishToWeb()">🌐 PUBLISH TO ARCHIVES</button>
-    <div id="debug-log">> Ready for broadcast.</div>
+    <button class="tool-btn" style="width:100%; margin-bottom:5px;" onclick="updatePreview()">🔄 REFRESH PREVIEW</button>
+    <button class="export-btn" onclick="publishToWeb()">🌐 PUBLISH TO SUPABASE</button>
+
+    <div id="debug-log">System initialized. Ready to publish.</div>
 </div>
 
 <div id="preview-container" style="background:#808080; padding:20px; border:2px solid #000;">
@@ -52,34 +70,75 @@
 </div>
 
 <script>
-    const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
+    // 1. FILL THESE WITH YOUR KEYS
+    const supabaseUrl = 'https://wemdedhwtlirdevkplch.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o';
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    // This will fix the "Stuck on Connecting" status
+    if (_supabase) {
+       document.getElementById('dbStatus').innerText = "[ ONLINE ]";
+       document.getElementById('dbStatus').style.color = "#00ff00";
+    }
 
     function log(msg, isError = false) {
         const logger = document.getElementById('debug-log');
-        logger.innerHTML = `> <span style="color:${isError ? '#ff5555' : '#00ff00'}">${msg}</span><br>` + logger.innerHTML;
+        const color = isError ? "#ff5555" : "#00ff00";
+        logger.innerHTML = `<span style="color:${color}">${isError ? '[ERROR]' : '[OK]'} ${msg}</span><br>` + logger.innerHTML;
+    }
+
+    function formatText(tag) {
+        const area = document.getElementById('bodyText');
+        const start = area.selectionStart;
+        const end = area.selectionEnd;
+        area.value = area.value.substring(0, start) + `<${tag}>` + area.value.substring(start, end) + `</${tag}>` + area.value.substring(end);
+        updatePreview();
+    }
+
+    function insertTag(tag) {
+        const area = document.getElementById('bodyText');
+        const pos = area.selectionStart;
+        area.value = area.value.substring(0, pos) + tag + area.value.substring(pos);
+        updatePreview();
     }
 
     function updatePreview() {
+        const date = document.getElementById('reportDate').value;
         const head = document.getElementById('headline').value;
         const body = document.getElementById('bodyText').value;
         const img = document.getElementById('imgSrc').value;
-        const date = document.getElementById('reportDate').value;
 
-        document.getElementById('preview').srcdoc = `<html><body style="font-family:serif;padding:20px;"><div style="max-width:500px;margin:auto;border:1px solid #ccc;padding:20px;box-shadow:5px 5px 0 #000;"><small>${date}</small><h1>${head}</h1><img src="${img}" style="width:100%;border:1px solid #000;"><p style="white-space:pre-wrap;">${body}</p></div></body></html>`;
+        const fullHTML = `<html><body style="font-family:serif; padding:20px;">
+            <div style="max-width:500px; margin:auto; border:1px solid #ccc; padding:20px; box-shadow:5px 5px 0 #000;">
+                <small>${date}</small>
+                <h1 style="border-bottom:2px solid #000;">${head}</h1>
+                <img src="${img}" style="width:100%; border:1px solid #000;">
+                <p>${body}</p>
+            </div></body></html>`;
+
+        document.getElementById('preview').srcdoc = fullHTML;
     }
 
     async function publishToWeb() {
-        log("Uploading...");
-        const { error } = await _supabase.from('articles').insert([{ 
-            title: document.getElementById('headline').value,
-            content: document.getElementById('bodyText').value,
-            date: document.getElementById('reportDate').value,
-            image_url: document.getElementById('imgSrc').value,
-            is_admin_post: true 
-        }]);
-        if (error) log(error.message, true);
-        else log("Article Published!");
+        log("Attempting to publish...");
+        const { data, error } = await _supabase
+          .from('articles')
+          .insert([{ 
+              title: document.getElementById('headline').value,
+              content: document.getElementById('bodyText').value,
+              date: document.getElementById('reportDate').value,
+              image_url: document.getElementById('imgSrc').value
+          }]);
+
+        if (error) {
+            log(error.message, true);
+            console.error(error);
+        } else {
+            log("Published successfully to articles table!");
+            document.getElementById('dbStatus').innerText = "[ PUBLISHED ]";
+        }
     }
+
     updatePreview();
 </script>
 </body>
