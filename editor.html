@@ -4,79 +4,123 @@
     <title>The Daily Paw | Editor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="icon" type="image/png" href="tdp.png">
     <style>
         :root { --win-gray: #d4d0c8; --win-blue: #000080; }
         body { background: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 0; padding: 15px; }
-        .win-window { background: var(--win-gray); color: black; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 15px; max-width: 500px; margin: auto; }
+        .win-window { background: var(--win-gray); color: black; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 15px; max-width: 550px; margin: auto; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
         .win-title { background: var(--win-blue); color: white; padding: 4px; font-weight: bold; margin-bottom: 15px; font-size: 14px; }
-        .win-btn { padding: 4px 8px; background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; font-family: inherit; }
-        .toolbar { display: flex; gap: 4px; margin-bottom: 5px; }
-        textarea { width: 95%; padding: 5px; border: 2px inset #fff; font-family: inherit; height: 150px; }
-        .preview-pane { background: white; border: 1px solid #000; padding: 10px; margin-top: 10px; color: black; min-height: 40px; }
-        #status-msg { background: #000; color: #0f0; padding: 5px; font-family: monospace; font-size: 11px; margin-top: 10px; }
+        .win-btn { padding: 4px 8px; background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; font-family: inherit; font-size: 12px; }
+        .win-btn:active { border: 2px inset #fff; }
+        
+        .toolbar { display: flex; gap: 4px; margin: 10px 0 5px 0; }
+        input, textarea { width: 96%; padding: 5px; border: 2px inset #fff; font-family: inherit; margin-bottom: 10px; }
+        
+        /* The Preview Pane - Styled like the actual article paper */
+        .preview-label { font-weight: bold; margin-top: 15px; display: block; font-size: 12px; color: #404040; }
+        .paper-preview { 
+            background: white; color: black; border: 1px solid #000; padding: 20px; 
+            margin-top: 5px; min-height: 100px; font-family: 'Georgia', serif; 
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1); overflow-wrap: break-word;
+        }
+        .paper-preview h1 { margin-top: 0; font-size: 1.5rem; border-bottom: 1px solid #eee; }
+        .preview-img { width: 100%; border: 1px solid #000; margin-bottom: 10px; display: none; }
+        
+        #status-msg { background: #000; color: #0f0; padding: 5px; font-family: monospace; font-size: 11px; margin-top: 10px; border: 2px inset #fff; }
     </style>
 </head>
 <body>
 
 <div class="win-window">
     <div class="win-title">[ NEWS_EDITOR.EXE ]</div>
-    <a href="index.html" class="win-btn" style="text-decoration:none; color:black; font-size:10px;">< BACK</a>
-    <br><br>
-    <label>Headline:</label><br>
-    <input type="text" id="headline" style="width:95%;" oninput="updatePreview()">
     
-    <div class="toolbar" style="margin-top:10px;">
-        <button class="win-btn" onclick="tag('b')">B</button>
-        <button class="win-btn" onclick="tag('i')">I</button>
-        <button class="win-btn" onclick="tag('u')">U</button>
-        <button class="win-btn" onclick="tag('br')">LINE</button>
-    </div>
-    <textarea id="bodyText" oninput="updatePreview()"></textarea>
+    <a href="index.html" class="win-btn" style="text-decoration:none; color:black;">< BACK</a>
 
-    <div style="background:#c0c0c0; border:1px solid #808080; padding:10px; margin-top:10px;">
-        <button class="win-btn" onclick="document.getElementById('fileInput').click()">ATTACH IMAGE</button>
-        <input type="file" id="fileInput" accept="image/*" style="display:none;">
-        <input type="hidden" id="imgSrc">
-        <img id="img-prev" style="width:100%; display:none; margin-top:5px; border:1px solid #000;">
+    <div style="margin-top:15px;">
+        <label>Headline:</label><br>
+        <input type="text" id="headline" placeholder="Extra! Extra! Read all about it..." oninput="updatePreview()">
+        
+        <div class="toolbar">
+            <button class="win-btn" onclick="tag('b')"><b>B</b></button>
+            <button class="win-btn" onclick="tag('i')"><i>I</i></button>
+            <button class="win-btn" onclick="tag('u')"><u>U</u></button>
+            <button class="win-btn" onclick="tag('h1')">H1</button>
+            <button class="win-btn" onclick="tag('br')">LINE</button>
+        </div>
+        
+        <textarea id="bodyText" rows="8" placeholder="Type your story here..." oninput="updatePreview()"></textarea>
+
+        <div style="background:#c0c0c0; border:1px solid #808080; padding:10px;">
+            <input type="file" id="fileInput" accept="image/*" style="display:none;">
+            <button class="win-btn" onclick="document.getElementById('fileInput').click()">ATTACH PHOTOGRAPH</button>
+            <input type="hidden" id="imgSrc">
+        </div>
     </div>
 
-    <div class="preview-pane" id="live-preview"></div>
-    <button class="win-btn" style="width:100%; background:#2ecc71; color:white; margin-top:10px;" onclick="publish()">PUBLISH</button>
-    <div id="status-msg">> Ready.</div>
+    <span class="preview-label">LIVE PRINT PREVIEW:</span>
+    <div id="live-preview" class="paper-preview">
+        <img id="preview-img-element" class="preview-img">
+        <h1 id="preview-headline"></h1>
+        <div id="preview-body"></div>
+    </div>
+
+    <button class="win-btn" style="width:100%; background:#2ecc71; color:white; margin-top:15px; height:35px;" onclick="publish()">PUBLISH TO ARCHIVE</button>
+
+    <div id="status-msg">> System Ready.</div>
 </div>
 
 <script>
     const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
-    
+
+    function log(msg, isError = false) {
+        const el = document.getElementById('status-msg');
+        el.innerText = "> " + msg;
+        el.style.color = isError ? "#f55" : "#0f0";
+    }
+
     function tag(t) {
-        const a = document.getElementById('bodyText');
-        const s = a.selectionStart, e = a.selectionEnd;
-        const tagO = `<${t}>`, tagC = t === 'br' ? '' : `</${t}>`;
-        a.value = a.value.slice(0, s) + tagO + a.value.slice(s, e) + tagC + a.value.slice(e);
+        const area = document.getElementById('bodyText');
+        const start = area.selectionStart;
+        const end = area.selectionEnd;
+        const open = `<${t}>`;
+        const close = t === 'br' ? '' : `</${t}>`;
+        area.value = area.value.slice(0, start) + open + area.value.slice(start, end) + close + area.value.slice(end);
         updatePreview();
     }
 
     function updatePreview() {
-        const h = document.getElementById('headline').value;
-        const b = document.getElementById('bodyText').value;
-        document.getElementById('live-preview').innerHTML = `<strong>${h}</strong><br>${b.replace(/\n/g, '<br>')}`;
+        const head = document.getElementById('headline').value;
+        const body = document.getElementById('bodyText').value;
+        
+        document.getElementById('preview-headline').innerText = head;
+        // Convert newlines to <br> for the preview to look right
+        document.getElementById('preview-body').innerHTML = body.replace(/\n/g, '<br>');
     }
 
     document.getElementById('fileInput').onchange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        const path = `avatars/${Date.now()}_${file.name}`;
-        const { error } = await _supabase.storage.from('article-images').upload(path, file);
-        if (error) return alert(error.message);
-        const { data } = _supabase.storage.from('article-images').getPublicUrl(path);
-        document.getElementById('imgSrc').value = data.publicUrl;
-        document.getElementById('img-prev').src = data.publicUrl;
-        document.getElementById('img-prev').style.display = 'block';
+
+        log("Uploading media...");
+        const path = `article-content/${Date.now()}_${file.name}`;
+        
+        const { data, error } = await _supabase.storage.from('article-images').upload(path, file);
+        if (error) return log(error.message, true);
+
+        const { data: urlData } = _supabase.storage.from('article-images').getPublicUrl(path);
+        
+        document.getElementById('imgSrc').value = urlData.publicUrl;
+        const prevImg = document.getElementById('preview-img-element');
+        prevImg.src = urlData.publicUrl;
+        prevImg.style.display = "block";
+        log("Image processed.");
     };
 
     async function publish() {
         const { data: { user } } = await _supabase.auth.getUser();
-        if (!user) return alert("Log in first!");
+        if (!user) return log("Error: Authentication required.", true);
+
+        log("Transmitting to database...");
         const { error } = await _supabase.from('articles').insert([{
             title: document.getElementById('headline').value,
             content: document.getElementById('bodyText').value,
@@ -84,7 +128,9 @@
             user_id: user.id,
             date: new Date().toLocaleDateString()
         }]);
-        if (!error) window.location.href = "index.html";
+
+        if (error) log(error.message, true);
+        else window.location.href = "index.html";
     }
 </script>
 </body>
