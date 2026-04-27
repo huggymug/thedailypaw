@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="icon" type="image/png" href="tdp.png">
-    <title>Huggymug Productions | News Editor v7.2</title>
+    <title>Huggymug Productions | News Editor v7.3</title>
     <style>
         :root { --win-gray: #d4d0c8; --win-blue: #000080; }
         body { background-color: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 0; padding: 0; }
@@ -20,12 +20,9 @@
         .toolbar { display: flex; gap: 2px; background: #808080; padding: 2px; border: 1px solid #404040; }
         .tool-btn { padding: 2px 8px; background: var(--win-gray); border: 1px solid #fff; border-right: 1px solid #404040; border-bottom: 1px solid #404040; cursor: pointer; font-weight: bold; }
         .export-btn { width: 100%; padding: 10px; margin-top: 5px; background: #2ecc71; color: white; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; }
-        #debug-log { background: black; color: #00ff00; font-family: monospace; font-size: 0.75rem; padding: 10px; margin-top: 10px; height: 60px; overflow-y: auto; border: 2px inset #fff; }
-        
-        /* Auth Modal Styles */
+        #debug-log { background: black; color: #00ff00; font-family: monospace; font-size: 0.75rem; padding: 10px; margin-top: 10px; height: 80px; overflow-y: auto; border: 2px inset #fff; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; justify-content: center; align-items: center; }
         .login-window { background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 20px; width: 280px; color: black; }
-        
         @media (max-width: 800px) { .container { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -34,50 +31,24 @@
 <div id="loginModal" class="modal-overlay">
     <div class="login-window">
         <div class="win-title" style="margin-bottom:15px;"><span>[ LOGIN_REQUIRED.EXE ]</span></div>
-        <div class="field">
-            <label>Email:</label>
-            <input type="email" id="auth-email">
-        </div>
-        <div class="field">
-            <label>Password:</label>
-            <input type="password" id="auth-password">
-        </div>
-        <div style="display:flex; gap:5px; margin-top:10px;">
-            <button class="win-btn" onclick="handleAuth('login')">LOGIN</button>
-            <button class="win-btn" onclick="handleAuth('signup')">SIGN UP</button>
-        </div>
-        <p id="auth-error" style="color:red; font-size:0.7rem; margin-top:10px; font-family:sans-serif;"></p>
+        <div class="field"><label>Email:</label><input type="email" id="auth-email"></div>
+        <div class="field"><label>Password:</label><input type="password" id="auth-password"></div>
+        <div style="display:flex; gap:5px;"><button class="win-btn" onclick="handleAuth('login')">LOGIN</button><button class="win-btn" onclick="handleAuth('signup')">SIGN UP</button></div>
+        <p id="auth-error" style="color:red; font-size:0.7rem; margin-top:10px;"></p>
     </div>
 </div>
 
 <div class="top-nav">
     <a href="index.html" class="win-btn">< BACK</a>
-    <div id="user-status" style="color:white; font-size:0.8rem; font-family:sans-serif;">Checking session...</div>
+    <div id="user-status" style="color:white; font-size:0.8rem;">Checking...</div>
 </div>
 
 <div class="container">
     <div id="editor">
-        <div class="win-title">
-            <span>[ HUGGYMUG_NEWS_EDITOR.EXE ]</span>
-            <span id="dbStatus" style="color: #ffff00;">[ OFFLINE ]</span>
-        </div>
-        
-        <div class="field" style="margin-top:10px;">
-            <label>Date:</label>
-            <input type="text" id="reportDate">
-        </div>
-
-        <div class="field">
-            <label>Headline:</label>
-            <input type="text" id="headline" placeholder="Breaking News...">
-        </div>
-
-        <div class="field">
-            <label>Photo Picker:</label>
-            <input type="file" id="fileInput" accept="image/*" style="font-size:0.7rem; margin-bottom:5px;">
-            <input type="text" id="imgSrc" placeholder="Image URL will appear here...">
-        </div>
-
+        <div class="win-title"><span>[ HUGGYMUG_NEWS_EDITOR.EXE ]</span><span id="dbStatus" style="color:#ffff00;">[ OFFLINE ]</span></div>
+        <div class="field" style="margin-top:10px;"><label>Date:</label><input type="text" id="reportDate"></div>
+        <div class="field"><label>Headline:</label><input type="text" id="headline" placeholder="Type here..."></div>
+        <div class="field"><label>Photo:</label><input type="file" id="fileInput" accept="image/*" style="font-size:0.7rem;"><input type="text" id="imgSrc" placeholder="Image URL..."></div>
         <div class="field">
             <label>Content:</label>
             <div class="toolbar">
@@ -87,14 +58,11 @@
             </div>
             <textarea id="bodyText" rows="10"></textarea>
         </div>
-
         <button class="export-btn" onclick="publishToWeb()">🌐 PUBLISH TO SUPABASE</button>
-        <div id="debug-log">System Ready.</div>
+        <div id="debug-log">Ready.</div>
+        <button class="win-btn" style="width:100%; margin-top:5px; font-size:0.6rem;" onclick="location.reload()">REFRESH SYSTEM</button>
     </div>
-
-    <div id="preview-container" style="background:#808080; padding:20px; border:2px solid #000;">
-        <iframe id="preview" style="width:100%; height:90vh; background:white; border:none;"></iframe>
-    </div>
+    <div id="preview-container" style="background:#808080; padding:20px; border:2px solid #000;"><iframe id="preview" style="width:100%; height:90vh; background:white; border:none;"></iframe></div>
 </div>
 
 <script>
@@ -103,7 +71,7 @@
     async function checkUser() {
         const { data: { session } } = await _supabase.auth.getSession();
         if (session) {
-            document.getElementById('user-status').innerText = "Logged in: " + session.user.email;
+            document.getElementById('user-status').innerText = "User: " + session.user.email;
             document.getElementById('dbStatus').innerText = "[ ONLINE ]";
             document.getElementById('dbStatus').style.color = "#00ff00";
             document.getElementById('loginModal').style.display = 'none';
@@ -118,7 +86,6 @@
         const { error } = (type === 'login') 
             ? await _supabase.auth.signInWithPassword({ email, password })
             : await _supabase.auth.signUp({ email, password });
-
         if (error) document.getElementById('auth-error').innerText = error.message;
         else location.reload();
     }
@@ -126,14 +93,14 @@
     document.getElementById('fileInput').addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        log("Uploading file...");
+        log("Uploading...");
         const fileName = `${Date.now()}_${file.name}`;
         const { data, error } = await _supabase.storage.from('article-images').upload(fileName, file);
         if (error) log(error.message, true);
         else {
             const { data: { publicUrl } } = _supabase.storage.from('article-images').getPublicUrl(fileName);
             document.getElementById('imgSrc').value = publicUrl;
-            log("Upload complete!");
+            log("Photo uploaded!");
             updatePreview();
         }
     });
@@ -163,11 +130,9 @@
         const head = document.getElementById('headline').value;
         const body = document.getElementById('bodyText').value;
         const img = document.getElementById('imgSrc').value;
-
         const fullHTML = `<html><body style="font-family:serif; padding:20px;">
             <div style="max-width:500px; margin:auto; border:1px solid #ccc; padding:20px; box-shadow:5px 5px 0 #000;">
-                <small>${date}</small>
-                <h1 style="border-bottom:2px solid #000;">${head}</h1>
+                <small>${date}</small><h1 style="border-bottom:2px solid #000;">${head}</h1>
                 ${img ? `<img src="${img}" style="width:100%; border:1px solid #000;">` : ''}
                 <p style="white-space: pre-wrap;">${body}</p>
             </div></body></html>`;
@@ -176,19 +141,19 @@
 
     async function publishToWeb() {
         const { data: { user } } = await _supabase.auth.getUser();
-        if (!user) { alert("Please log in!"); return; }
-
-        log("Sending to database...");
+        if (!user) return;
+        log("Pushing to 'content' column...");
         const { error } = await _supabase.from('articles').insert([{ 
             title: document.getElementById('headline').value,
-            body: document.getElementById('bodyText').value, // Fixed column name
+            content: document.getElementById('bodyText').value, // Matches your column!
             date: document.getElementById('reportDate').value,
             image_url: document.getElementById('imgSrc').value,
             user_id: user.id
         }]);
-
-        if (error) log(error.message, true);
-        else {
+        if (error) {
+            log(error.message, true);
+            if (error.message.includes("schema cache")) log("Schema mismatch! Try refreshing.", true);
+        } else {
             log("SUCCESS!");
             window.location.href = "index.html";
         }
