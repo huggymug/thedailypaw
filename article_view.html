@@ -1,21 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>The Daily Paw | View</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta charset="UTF-8">
+    <title>The Daily Paw | Archive Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="icon" type="image/png" href="tdp.png">
     <style>
-        body { font-family: 'Georgia', serif; background: #3b3b3b; margin: 0; padding: 10px; padding-top: 60px; color: #2c3e50; }
+        body { font-family: 'Georgia', serif; background: #3b3b3b; margin: 0; padding: 10px; padding-top: 65px; color: #2c3e50; }
         .nav-header { position: fixed; top: 0; left: 0; right: 0; background: #000080; padding: 10px; display: flex; justify-content: space-between; align-items: center; z-index: 100; border-bottom: 2px solid #fff; }
         .win-btn { background: #d4d0c8; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 8px 15px; cursor: pointer; font-weight: bold; font-family: sans-serif; text-decoration: none; color: black; display: inline-block; font-size: 0.8rem; }
-        .paper { max-width: 600px; margin: auto; background: white; padding: 25px; border: 1px solid #ccc; box-shadow: 10px 10px 0px #000; box-sizing: border-box; }
+        .paper { max-width: 600px; margin: auto; background: white; padding: 25px; border: 1px solid #ccc; box-shadow: 10px 10px 0px #000; box-sizing: border-box; margin-bottom: 20px; }
         h1 { border-bottom: 3px solid black; padding-bottom: 10px; margin-top: 0; font-size: 1.8rem; }
-        img { width: 100%; border: 1px solid #000; margin-bottom: 15px; }
-        #auth-box { background: #eee; padding: 15px; border: 1px solid #ccc; margin-top: 20px; font-family: sans-serif; }
-        input, textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 2px inset #fff; box-sizing: border-box; font-size: 16px; }
+        img { width: 100%; border: 1px solid #000; margin-bottom: 15px; display: block; height: auto; }
+        .comment-box { background: #f0f0f0; border: 1px inset #fff; padding: 10px; margin-top: 10px; font-family: sans-serif; font-size: 0.9rem; border-left: 4px solid #000080; }
+        .author-link { color: #000080; text-decoration: underline; font-family: sans-serif; font-weight: bold; }
+        .comment-form { margin-top: 20px; padding: 15px; background: #e0e0e0; border: 2px solid #000; }
+        textarea { width: 100%; height: 60px; border: 2px inset #fff; padding: 5px; box-sizing: border-box; font-family: sans-serif; resize: none; }
+        .post-btn { margin-top: 10px; background: #2ecc71; color: white; border: 2px solid #fff; border-right: 2px solid #1a5935; border-bottom: 2px solid #1a5935; padding: 5px 20px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -25,89 +27,82 @@
     <a href="editor.html" class="win-btn" style="background:#2ecc71; color:white;">+ POST</a>
 </div>
 
-<div id="article-content">
-    <div class="paper">Loading...</div>
-</div>
-
-<div class="paper" style="margin-top: 20px;">
-    <h3 style="font-family: sans-serif;">COMMENTS</h3>
-    <div id="comment-list" style="font-family: sans-serif;"></div>
-    <div id="auth-box">
-        <div id="auth-title"><b>SIGN IN</b></div>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="pass" placeholder="Password">
-        <div id="login-tools"><button class="win-btn" style="width:100%;" onclick="handleAuth('login')">LOGIN</button>
-        <p style="font-size:0.7rem; text-align:center;">No account? <a href="#" onclick="toggleAuth(true)">Sign Up</a></p></div>
-        <div id="signup-tools" style="display:none;"><button class="win-btn" style="width:100%; background:#3498db; color:white;" onclick="handleAuth('signup')">CREATE ACCOUNT</button>
-        <p style="font-size:0.7rem; text-align:center;"><a href="#" onclick="toggleAuth(false)">Back</a></p></div>
-    </div>
-    <div id="comment-form" style="display:none; font-family: sans-serif;">
-        <input type="text" id="c-user" readonly style="background:#ddd;">
-        <textarea id="c-body" rows="3" placeholder="Reply..."></textarea>
-        <button class="win-btn" style="width:100%;" onclick="postComment()">POST REPLY</button>
-    </div>
+<div id="article-container">
+    <div class="paper">Fetching Broadcast...</div>
 </div>
 
 <script>
     const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
-    const artId = new URLSearchParams(window.location.search).get('id');
+    let currentArtId = null;
 
-    function toggleAuth(isSignUp) {
-        document.getElementById('auth-title').innerHTML = isSignUp ? "<b>CREATE ACCOUNT</b>" : "<b>SIGN IN</b>";
-        document.getElementById('login-tools').style.display = isSignUp ? 'none' : 'block';
-        document.getElementById('signup-tools').style.display = isSignUp ? 'block' : 'none';
-    }
+    async function loadPage() {
+        const params = new URLSearchParams(window.location.search);
+        currentArtId = params.get('id');
+        if (!currentArtId) return;
 
-    async function handleAuth(type) {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('pass').value;
-        const { data, error } = type === 'login' ? 
-            await _supabase.auth.signInWithPassword({ email, password }) : 
-            await _supabase.auth.signUp({ email, password });
+        try {
+            const { data: art, error: artErr } = await _supabase.from('articles').select('*, profiles(username, rank)').eq('id', currentArtId).single();
+            if (artErr) throw artErr;
 
-        if (error) alert(error.message);
-        else if (type === 'login') {
-            document.getElementById('auth-box').style.display = 'none';
-            document.getElementById('comment-form').style.display = 'block';
-            document.getElementById('c-user').value = email.split('@')[0];
-        } else alert("Done! Log in now.");
-    }
+            const authorName = art.profiles?.username || "Legacy User";
+            const badge = art.profiles?.rank === 'admin' ? ' ☑' : '';
 
-    async function loadArticle() {
-        if (!artId) return;
-        let { data: art } = await _supabase.from('articles').select('*').eq('id', artId).single();
-        if (art) {
-            document.getElementById('article-content').innerHTML = `
+            document.getElementById('article-container').innerHTML = `
                 <div class="paper">
-                    <small>${art.date}</small>
+                    <small>${art.date || ''}</small> | By: <a href="profile.html?id=${art.user_id}" class="author-link">${authorName}${badge}</a>
                     <h1>${art.title}</h1>
-                    <img src="${art.image_url}">
-                    <p style="white-space: pre-wrap;">${art.content}</p>
+                    ${art.image_url ? `<img src="${art.image_url}">` : ''}
+                    <div style="white-space: pre-wrap;">${art.content}</div>
+                    <hr style="margin-top:30px; border: 1px dashed #ccc;">
+                    <h3>Responses</h3>
+                    <div id="comment-list">Loading...</div>
+                    <div class="comment-form">
+                        <textarea id="comment-input" placeholder="Type your response..."></textarea>
+                        <button class="post-btn" onclick="sendComment()">SEND RESPONSE</button>
+                    </div>
                 </div>`;
-        }
-        loadComments();
+            loadComments();
+        } catch (e) { document.getElementById('article-container').innerHTML = `<div class="paper">Error: ${e.message}</div>`; }
     }
 
     async function loadComments() {
-        const list = document.getElementById('comment-list');
-        let { data: comms } = await _supabase.from('comments').select('*').eq('article_id', artId).order('created_at', { ascending: true });
-        list.innerHTML = comms && comms.length ? "" : "<p>No replies yet.</p>";
-        if(comms) comms.forEach(c => {
-            const d = document.createElement('div');
-            d.style = "border-top:1px solid #eee; padding:10px 0;";
-            d.innerHTML = `<b>${c.username}</b>: ${c.body}`;
-            list.appendChild(d);
+        const { data: comments, error } = await _supabase.from('comments').select('*, profiles(username, rank)').eq('article_id', currentArtId).order('created_at', { ascending: true });
+        if (error) return;
+
+        let comHtml = comments.length === 0 ? "<p>No responses yet.</p>" : "";
+        comments.forEach(c => {
+            const cUser = c.profiles?.username || "Guest";
+            const cBadge = c.profiles?.rank === 'admin' ? ' ☑' : '';
+            // Match the 'body' column you found!
+            const finalContent = c.body || "Empty response";
+            comHtml += `<div class="comment-box"><strong>${cUser}${cBadge}</strong>: ${finalContent}</div>`;
         });
+        document.getElementById('comment-list').innerHTML = comHtml;
     }
 
-    async function postComment() {
-        const user = document.getElementById('c-user').value;
-        const body = document.getElementById('c-body').value;
-        const { error } = await _supabase.from('comments').insert([{ article_id: artId, username: user, body: body }]);
-        if (!error) { document.getElementById('c-body').value = ""; loadComments(); }
-    }
+    async function sendComment() {
+        const val = document.getElementById('comment-input').value;
+        if (!val) return;
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (!user) { alert("Login required!"); return; }
 
-    loadArticle();
+        // Updated to use 'body' as shown in your screenshot
+        const { error } = await _supabase.from('comments').insert([
+            { 
+                article_id: currentArtId, 
+                user_id: user.id, 
+                body: val 
+            }
+        ]);
+
+        if (error) { 
+            alert("Error: " + error.message); 
+        } else {
+            document.getElementById('comment-input').value = "";
+            loadComments();
+        }
+    }
+    loadPage();
 </script>
 </body>
 </html>

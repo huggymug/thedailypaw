@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>The Daily Paw | Profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="icon" type="image/png" href="tdp.png">
+    <style>
+        body { background: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 0; padding: 20px; padding-top: 60px; }
+        .nav-header { position: fixed; top: 0; left: 0; right: 0; background: #000080; padding: 10px; display: flex; justify-content: space-between; z-index: 100; border-bottom: 2px solid #fff; }
+        .win-window { background: #d4d0c8; color: black; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 15px; max-width: 600px; margin: auto; }
+        .badge { margin-left: 5px; }
+        .post-item { background: white; border: 1px solid #000; padding: 10px; margin-top: 10px; display: block; color: black; text-decoration: none; }
+        .win-btn { background: #d4d0c8; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 5px 10px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="nav-header">
+    <a href="index.html" class="win-btn" style="text-decoration:none; color:black;">< BACK</a>
+    <span id="header-title">USER_PROFILE.EXE</span>
+</div>
+
+<div class="win-window">
+    <h2 id="display-name">Loading...</h2>
+    <div id="admin-tools" style="display:none; border:1px dashed #404040; padding:10px; margin-bottom:10px;">
+        <small>ADMIN TOOLS:</small><br>
+        <button class="win-btn" onclick="setRank('admin')">GIVE ☑</button>
+        <button class="win-btn" onclick="setRank('mod')">GIVE 🛡</button>
+    </div>
+    
+    <div id="edit-tools" style="display:none;">
+        <input type="text" id="new-username" placeholder="New Display Name">
+        <button class="win-btn" onclick="updateUsername()">UPDATE NAME</button>
+    </div>
+
+    <hr>
+    <h3>POST HISTORY</h3>
+    <div id="user-posts"></div>
+    <h3>RECENT COMMENTS</h3>
+    <div id="user-comments"></div>
+</div>
+
+<script>
+    const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetUserId = urlParams.get('id');
+
+    async function loadProfile() {
+        // 1. Fetch Profile Data
+        let { data: profile } = await _supabase.from('profiles').select('*').eq('id', targetUserId).single();
+        if (!profile) return;
+
+        let badge = profile.rank === 'admin' ? ' ☑' : (profile.rank === 'mod' ? ' 🛡' : '');
+        document.getElementById('display-name').innerText = profile.username + badge;
+
+        // 2. Check if Current User is Admin or the Owner
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (user) {
+            if (user.id === targetUserId) document.getElementById('edit-tools').style.display = 'block';
+            
+            let { data: currentUserProfile } = await _supabase.from('profiles').select('rank').eq('id', user.id).single();
+            if (currentUserProfile?.rank === 'admin') document.getElementById('admin-tools').style.display = 'block';
+        }
+
+        // 3. Load User Posts
+        let { data: posts } = await _supabase.from('articles').select('*').eq('user_id', targetUserId);
+        posts?.forEach(p => {
+            const a = document.createElement('a');
+            a.className = 'post-item';
+            a.href = `article_view.html?id=${p.id}`;
+            a.innerHTML = `<strong>${p.title}</strong><br><small>${p.date}</small>`;
+            document.getElementById('user-posts').appendChild(a);
+        });
+    }
+
+    async function setRank(newRank) {
+        await _supabase.from('profiles').update({ rank: newRank }).eq('id', targetUserId);
+        location.reload();
+    }
+
+    loadProfile();
+</script>
+</body>
+</html>
