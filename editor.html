@@ -1,52 +1,107 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>The Daily Paw | Editor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="icon" type="image/png" href="tdp.png">
     <style>
         :root { --win-gray: #d4d0c8; --win-blue: #000080; }
-        body { background: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 0; padding: 10px; }
+        body { background: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 0; padding: 20px; }
         .win-window { background: var(--win-gray); color: black; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 15px; max-width: 500px; margin: auto; }
-        .win-title { background: var(--win-blue); color: white; padding: 5px; font-weight: bold; margin-bottom: 10px; }
-        input, textarea { width: 95%; padding: 5px; margin-bottom: 10px; border: 2px inset #fff; }
-        .win-btn { padding: 8px 15px; background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; }
+        .win-title { background: var(--win-blue); color: white; padding: 4px; font-weight: bold; margin-bottom: 15px; font-size: 14px; }
+        .win-btn { padding: 5px 15px; background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; font-family: inherit; }
+        .win-btn:active { border: 2px inset #fff; }
+        input, textarea { width: 95%; padding: 5px; margin-bottom: 10px; border: 2px inset #fff; font-family: inherit; }
+        #status-msg { background: #000; color: #0f0; padding: 5px; font-family: monospace; font-size: 12px; margin-top: 10px; border: 2px inset #fff; }
     </style>
 </head>
 <body>
+
 <div class="win-window">
     <div class="win-title">[ NEWS_EDITOR.EXE ]</div>
-    <a href="index.html" class="win-btn" style="margin-bottom:10px; display:inline-block;">< BACK</a>
-    <input type="text" id="headline" placeholder="Headline">
-    <textarea id="bodyText" rows="10" placeholder="Content..."></textarea>
+    
+    <div style="margin-bottom:15px;">
+        <a href="index.html" class="win-btn" style="text-decoration:none; color:black; font-size:12px;">< BACK</a>
+    </div>
+
+    <label>Headline:</label><br>
+    <input type="text" id="headline" placeholder="Enter title...">
+
+    <label>Content:</label><br>
+    <textarea id="bodyText" rows="10" placeholder="Write your story..."></textarea>
+
+    <label>Attachment:</label><br>
     <input type="file" id="fileInput" accept="image/*">
     <input type="hidden" id="imgSrc">
-    <button class="win-btn" style="width:100%; background:#2ecc71; color:white;" onclick="publish()">PUBLISH</button>
-    <div id="status" style="font-family:monospace; margin-top:10px; font-size:0.8rem;">Ready.</div>
+
+    <button class="win-btn" style="width:100%; background:#2ecc71; color:white; margin-top:10px;" onclick="publish()">PUBLISH ARTICLE</button>
+
+    <div id="status-msg">> Ready to transmit.</div>
 </div>
+
 <script>
     const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
+
+    function updateStatus(msg, isError = false) {
+        const el = document.getElementById('status-msg');
+        el.innerText = "> " + msg;
+        el.style.color = isError ? "#f55" : "#0f0";
+    }
+
     document.getElementById('fileInput').onchange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        document.getElementById('status').innerText = "Uploading...";
-        const name = `${Date.now()}_${file.name}`;
-        await _supabase.storage.from('article-images').upload(name, file);
-        const { data } = _supabase.storage.from('article-images').getPublicUrl(name);
-        document.getElementById('imgSrc').value = data.publicUrl;
-        document.getElementById('status').innerText = "Photo Ready!";
+
+        updateStatus("Uploading image...");
+        const fileName = `${Date.now()}_${file.name}`;
+        
+        const { data, error } = await _supabase.storage
+            .from('article-images')
+            .upload(fileName, file);
+
+        if (error) {
+            updateStatus("Upload Failed: " + error.message, true);
+        } else {
+            const { data: urlData } = _supabase.storage
+                .from('article-images')
+                .getPublicUrl(fileName);
+            
+            document.getElementById('imgSrc').value = urlData.publicUrl;
+            updateStatus("Image Ready.");
+        }
     };
+
     async function publish() {
+        const title = document.getElementById('headline').value;
+        const content = document.getElementById('bodyText').value;
+        const image_url = document.getElementById('imgSrc').value;
+
+        if (!title || !content) {
+            return updateStatus("Error: Missing fields.", true);
+        }
+
         const { data: { user } } = await _supabase.auth.getUser();
-        if (!user) { alert("Log in first!"); return; }
-        const { error } = await _supabase.from('articles').insert([{
-            title: document.getElementById('headline').value,
-            content: document.getElementById('bodyText').value,
-            image_url: document.getElementById('imgSrc').value,
-            user_id: user.id,
-            date: new Date().toLocaleDateString()
-        }]);
-        if (error) alert(error.message);
-        else window.location.href = "index.html";
+        if (!user) return updateStatus("Error: Not logged in.", true);
+
+        updateStatus("Publishing...");
+
+        const { error } = await _supabase
+            .from('articles')
+            .insert([{
+                title: title,
+                content: content, // Matches your DB column
+                image_url: image_url,
+                user_id: user.id,
+                date: new Date().toLocaleDateString()
+            }]);
+
+        if (error) {
+            updateStatus("Failed: " + error.message, true);
+        } else {
+            updateStatus("Success! Redirecting...");
+            setTimeout(() => window.location.href = "index.html", 1000);
+        }
     }
 </script>
 </body>
