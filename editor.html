@@ -1,95 +1,143 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Huggymug Productions | News Editor v11</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="icon" type="image/png" href="tdp.png">
+
+<title>Huggymug Productions | News Editor v7</title>
+<style>
+    :root { --win-gray: #d4d0c8; --win-blue: #000080; }
+    
+    /* Added Top Bar for the Exit Button */
+    .top-nav { 
+        background: var(--win-blue); 
+        padding: 5px 10px; 
+        border-bottom: 2px solid #fff;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+    }
+
+    body { background-color: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 0; padding: 0; }
+    
+    /* Your original grid layout */
+    .container { display: grid; grid-template-columns: 450px 1fr; gap: 20px; padding: 20px; }
+    
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="icon" type="image/png" href="tdp.png">
+    <title>Huggymug Productions | News Editor v7.1</title>
     <style>
         :root { --win-gray: #d4d0c8; --win-blue: #000080; }
-        body { background-color: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 0; padding: 10px; display: grid; grid-template-columns: 1fr; gap: 15px; }
-        
-        /* Desktop split-screen view */
-        @media (min-width: 900px) {
-            body { grid-template-columns: 450px 1fr; padding: 20px; height: 95vh; }
-        }
-
-        #editor { background: var(--win-gray); color: black; padding: 15px; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; height: fit-content; overflow-y: auto; }
-        .win-title { background: var(--win-blue); color: white; padding: 5px; font-weight: bold; display: flex; justify-content: space-between; font-size: 0.8rem; }
+        body { background-color: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 0; padding: 0; }
+        .top-nav { background: var(--win-blue); padding: 5px 10px; border-bottom: 2px solid #fff; display: flex; align-items: center; justify-content: space-between; }
+        .container { display: grid; grid-template-columns: 450px 1fr; gap: 20px; padding: 20px; }
+        #editor { background: var(--win-gray); color: black; padding: 15px; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; height: fit-content; }
+        .win-title { background: var(--win-blue); color: white; padding: 5px; font-weight: bold; display: flex; justify-content: space-between; }
         .field { margin-bottom: 12px; }
-        label { display: block; font-weight: bold; font-size: 0.85rem; margin-bottom: 2px; }
-        input, textarea { width: 100%; padding: 6px; border: 2px inset #fff; background: white; font-family: "Courier New", monospace; box-sizing: border-box; font-size: 16px; }
-        
-        /* Formatting Toolbar from v7 */
-        .toolbar { display: flex; gap: 2px; background: #808080; padding: 2px; border: 1px solid #404040; margin-bottom: 2px; }
-        .tool-btn { padding: 4px 10px; background: var(--win-gray); border: 1px solid #fff; border-right: 1px solid #404040; border-bottom: 1px solid #404040; cursor: pointer; font-weight: bold; font-size: 0.75rem; }
-        
-        .export-btn { width: 100%; padding: 12px; margin-top: 10px; background: #2ecc71; color: white; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; font-size: 1rem; }
-        #debug-log { background: black; color: #00ff00; font-family: monospace; font-size: 0.7rem; padding: 10px; margin-top: 10px; height: 70px; overflow-y: auto; border: 2px inset #fff; }
-        
-        #preview-container { background:#808080; padding:15px; border:2px solid #000; display: flex; flex-direction: column; }
-        iframe { width: 100%; flex-grow: 1; height: 500px; background: white; border: none; }
-        @media (min-width: 900px) { iframe { height: 100%; } }
+        label { display: block; font-weight: bold; font-size: 0.85rem; }
+        input, textarea { width: 94%; padding: 4px; border: 2px solid #404040; background: white; font-family: "Courier New", monospace; }
+        .win-btn { background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 4px 12px; cursor: pointer; font-weight: bold; text-decoration: none; color: black; font-size: 0.8rem; display: inline-block; }
+        .toolbar { display: flex; gap: 2px; background: #808080; padding: 2px; border: 1px solid #404040; }
+        .tool-btn { padding: 2px 8px; background: var(--win-gray); border: 1px solid #fff; border-right: 1px solid #404040; border-bottom: 1px solid #404040; cursor: pointer; font-weight: bold; }
+        .export-btn { width: 100%; padding: 10px; margin-top: 5px; background: #2ecc71; color: white; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; }
+        #debug-log { background: black; color: #00ff00; font-family: monospace; font-size: 0.75rem; padding: 10px; margin-top: 10px; height: 60px; overflow-y: auto; border: 2px inset #fff; }
+        @media (max-width: 800px) { .container { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div id="editor">
-    <div class="win-title">
-        <span>[ HUGGYMUG_ADMIN_CONSOLE.EXE ]</span>
-        <span id="dbStatus" style="color: #ffff00;">[ CONNECTING... ]</span>
-    </div>
-    
-    <div class="field" style="margin-top:10px;">
-        <label>Date of Report:</label>
-        <input type="text" id="reportDate" value="April 26, 2026">
-    </div>
-
-    <div class="field">
-        <label>Article Headline:</label>
-        <input type="text" id="headline" placeholder="Headline..." oninput="updatePreview()">
-    </div>
-
-    <div class="field">
-        <label>Upload/Choose Photo:</label>
-        <input type="file" id="imageUpload" accept="image/*" style="background:#eee; font-size: 0.7rem;" onchange="updatePreview()">
-        <input type="hidden" id="imgSrc" value="">
-    </div>
-
-    <div class="field">
-        <label>Article Content:</label>
-        <div class="toolbar">
-            <button class="tool-btn" onclick="formatText('b')">B</button>
-            <button class="tool-btn" onclick="formatText('i')">I</button>
-            <button class="tool-btn" onclick="formatText('s')">S</button>
-            <button class="tool-btn" onclick="insertTag('<br>')">LINE</button>
-        </div>
-        <textarea id="bodyText" rows="10" placeholder="Type here..." oninput="updatePreview()"></textarea>
-    </div>
-
-    <button class="export-btn" onclick="publishToWeb()">🌐 PUBLISH TO SUPABASE</button>
-    <div id="debug-log">> System initialized. Ready.</div>
-    <a href="index.html" style="display:block; text-align:center; margin-top:10px; color:#000; font-size:0.7rem;">Return to Archive</a>
+<div class="top-nav">
+    <a href="index.html" class="win-btn">< BACK</a>
+    <div id="user-status" style="color:white; font-size:0.8rem; font-family:sans-serif;">Checking session...</div>
 </div>
 
-<div id="preview-container">
-    <div class="win-title" style="margin-bottom:5px;"><span>[ PREVIEW_WINDOW ]</span></div>
-    <iframe id="preview"></iframe>
+<div class="container">
+    <div id="editor">
+        <div class="win-title">
+            <span>[ HUGGYMUG_NEWS_EDITOR.EXE ]</span>
+            <span id="dbStatus" style="color: #ffff00;">[ OFFLINE ]</span>
+        </div>
+        
+        <div class="field" style="margin-top:10px;">
+            <label>Date:</label>
+            <input type="text" id="reportDate" value="">
+        </div>
+
+        <div class="field">
+            <label>Headline:</label>
+            <input type="text" id="headline" placeholder="Type here...">
+        </div>
+
+        <div class="field">
+            <label>Photo Source:</label>
+            <input type="file" id="fileInput" accept="image/*" style="margin-bottom:5px; font-size:0.7rem;">
+            <input type="text" id="imgSrc" placeholder="Or paste URL...">
+        </div>
+
+        <div class="field">
+            <label>Content:</label>
+            <div class="toolbar">
+                <button class="tool-btn" onclick="formatText('b')">B</button>
+                <button class="tool-btn" onclick="formatText('i')">I</button>
+                <button class="tool-btn" onclick="insertTag('<br>')">Line</button>
+            </div>
+            <textarea id="bodyText" rows="10"></textarea>
+        </div>
+
+        <button class="export-btn" onclick="publishToWeb()">🌐 PUBLISH TO SUPABASE</button>
+        <div id="debug-log">Ready.</div>
+    </div>
+
+    <div id="preview-container" style="background:#808080; padding:20px; border:2px solid #000;">
+        <iframe id="preview" style="width:100%; height:90vh; background:white; border:none;"></iframe>
+    </div>
 </div>
 
 <script>
     const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
 
-    if (_supabase) {
-        document.getElementById('dbStatus').innerText = "[ ONLINE ]";
-        document.getElementById('dbStatus').style.color = "#00ff00";
+    // 1. Automatic Session Persistence
+    async function checkUser() {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (session) {
+            document.getElementById('user-status').innerText = "Logged in as: " + session.user.email;
+            document.getElementById('dbStatus').innerText = "[ ONLINE ]";
+            document.getElementById('dbStatus').style.color = "#00ff00";
+        } else {
+            document.getElementById('user-status').innerText = "Not logged in";
+            log("No active session found.", true);
+        }
     }
+
+    // 2. Photo from Device logic
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        log("Uploading photo...");
+        const fileName = `${Date.now()}_${file.name}`;
+        const { data, error } = await _supabase.storage.from('article-images').upload(fileName, file);
+        
+        if (error) {
+            log(error.message, true);
+        } else {
+            const { data: { publicUrl } } = _supabase.storage.from('article-images').getPublicUrl(fileName);
+            document.getElementById('imgSrc').value = publicUrl;
+            log("Photo linked!");
+            updatePreview();
+        }
+    });
 
     function log(msg, isError = false) {
         const logger = document.getElementById('debug-log');
-        logger.innerHTML = `> <span style="color:${isError ? '#ff5555' : '#00ff00'}">${msg}</span><br>` + logger.innerHTML;
+        logger.innerHTML = `<span style="color:${isError ? '#ff5555' : '#00ff00'}">> ${msg}</span><br>` + logger.innerHTML;
     }
 
     function formatText(tag) {
@@ -111,56 +159,38 @@
         const date = document.getElementById('reportDate').value;
         const head = document.getElementById('headline').value;
         const body = document.getElementById('bodyText').value;
-        const fileInput = document.getElementById('imageUpload');
-        
-        let tempImg = "";
-        if (fileInput.files && fileInput.files[0]) {
-            tempImg = URL.createObjectURL(fileInput.files[0]);
-        }
+        const img = document.getElementById('imgSrc').value;
 
-        document.getElementById('preview').srcdoc = `
-            <html><body style="font-family:serif;padding:20px;margin:0;">
-                <div style="max-width:100%;margin:auto;border:1px solid #ccc;padding:20px;box-shadow:5px 5px 0 #000;">
-                    <small>${date}</small>
-                    <h1 style="border-bottom:2px solid #000;margin-top:5px;">${head}</h1>
-                    ${tempImg ? `<img src="${tempImg}" style="width:100%;border:1px solid #000;margin-bottom:10px;">` : ''}
-                    <p style="white-space:pre-wrap;">${body}</p>
-                </div>
-            </body></html>`;
+        const fullHTML = `<html><body style="font-family:serif; padding:20px;">
+            <div style="max-width:500px; margin:auto; border:1px solid #ccc; padding:20px; box-shadow:5px 5px 0 #000;">
+                <small>${date}</small>
+                <h1 style="border-bottom:2px solid #000;">${head}</h1>
+                ${img ? `<img src="${img}" style="width:100%; border:1px solid #000;">` : ''}
+                <p style="white-space: pre-wrap;">${body}</p>
+            </div></body></html>`;
+        document.getElementById('preview').srcdoc = fullHTML;
     }
 
     async function publishToWeb() {
-        log("Checking for photo...");
-        const file = document.getElementById('imageUpload').files[0];
-        let finalUrl = "";
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (!user) { alert("Please log in first!"); return; }
 
-        if (file) {
-            log("Uploading to article-images bucket...");
-            const fileName = `${Date.now()}_${file.name}`;
-            const { error: upErr } = await _supabase.storage.from('article-images').upload(fileName, file);
-            
-            if (upErr) return log("Upload Error: " + upErr.message, true);
-            
-            const { data } = _supabase.storage.from('article-images').getPublicUrl(fileName);
-            finalUrl = data.publicUrl;
-            log("Image successfully hosted.");
-        }
-
-        log("Finalizing post...");
+        log("Publishing...");
         const { error } = await _supabase.from('articles').insert([{ 
             title: document.getElementById('headline').value,
             content: document.getElementById('bodyText').value,
             date: document.getElementById('reportDate').value,
-            image_url: finalUrl,
-            is_admin_post: true 
+            image_url: document.getElementById('imgSrc').value,
+            user_id: user.id
         }]);
 
         if (error) log(error.message, true);
-        else {
-            log("SUCCESS! Article published.");
-            setTimeout(() => window.location.href = 'index.html', 1200);
-        }
+        else log("SUCCESS!");
     }
+
+    document.getElementById('reportDate').value = new Date().toLocaleDateString();
+    document.querySelectorAll('input, textarea').forEach(el => el.oninput = updatePreview);
+    checkUser();
     updatePreview();
 </script>
 </body>
