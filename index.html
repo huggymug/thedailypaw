@@ -16,8 +16,8 @@
         .win-window { background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; color: black; padding: 15px; max-width: 800px; margin: auto; }
         .win-btn { padding: 5px 10px; background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; text-decoration: none; color: black; font-size: 0.75rem; white-space: nowrap; }
         .article-card { background: white; border: 1px solid #000; margin-bottom: 12px; padding: 15px; display: block; color: black; text-decoration: none; box-shadow: 5px 5px 0 #000; position: relative; }
-        .del-btn { position: absolute; top: 10px; right: 10px; background: #ff5555; color: white; border: 1px solid #000; padding: 2px 6px; font-size: 0.6rem; cursor: pointer; }
-        input { flex-grow: 1; padding: 8px; border: 2px inset #fff; font-size: 16px; width: 80%; }
+        .del-btn { position: absolute; top: 10px; right: 10px; background: #ff5555; color: white; border: 1px solid #000; padding: 2px 6px; font-size: 0.6rem; cursor: pointer; z-index: 10; }
+        input { flex-grow: 1; padding: 8px; border: 2px inset #fff; font-size: 16px; width: 70%; }
     </style>
 </head>
 <body>
@@ -38,6 +38,7 @@
     const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
     let currentUser = null;
     let userRank = 'user';
+
     async function init() {
         const { data: { session } } = await _supabase.auth.getSession();
         if (session) {
@@ -48,6 +49,7 @@
         }
         searchArticles();
     }
+
     async function searchArticles() {
         const query = document.getElementById('searchInput').value;
         const list = document.getElementById('articleList');
@@ -57,15 +59,17 @@
             const card = document.createElement('div');
             card.className = 'article-card';
             const canDelete = (currentUser && currentUser.id === art.user_id) || userRank === 'admin';
-            const delHtml = canDelete ? `<button class="del-btn" onclick="deletePost('${art.id}')">DEL</button>` : '';
+            const delHtml = canDelete ? `<button class="del-btn" onclick="deletePost(event, '${art.id}')">DEL</button>` : '';
             card.innerHTML = `${delHtml}<a href="article_view.html?id=${art.id}" style="text-decoration:none; color:black;"><small>${art.date || ''}</small><br><strong>${art.title}</strong></a>`;
             list.appendChild(card);
         });
     }
-    async function deletePost(id) {
+
+    async function deletePost(event, id) {
+        event.preventDefault(); // Stop link from opening
         if (!confirm("Permanently delete this post?")) return;
         const { error } = await _supabase.from('articles').delete().eq('id', id);
-        if (error) alert(error.message);
+        if (error) alert("Delete failed: " + error.message);
         else searchArticles();
     }
     init();
