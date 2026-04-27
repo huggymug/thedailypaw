@@ -1,8 +1,11 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html>
 <head>
     <title>The Daily Paw | Archive</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Daily Paw">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="icon" type="image/png" href="tdp.png">
     <style>
@@ -10,13 +13,11 @@
         body { background: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 0; padding: 10px; padding-top: 60px; }
         
         /* FIXED HEADER: Prevents wrapping and stays on one line */
-        .nav-header { 
-            position: fixed; top: 0; left: 0; right: 0; 
-            background: var(--win-blue); padding: 5px 10px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            z-index: 100; border-bottom: 2px solid #fff;
-            height: 40px; /* Locked height */
-            overflow: hidden;
+        .nav-header {
+            /* ... your other styles ... */
+            padding-top: env(safe-area-inset-top); /* This pushes content below the notch */
+            height: auto; 
+            min-height: 45px;
         }
 
         .nav-title { 
