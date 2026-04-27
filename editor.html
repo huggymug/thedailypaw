@@ -4,116 +4,87 @@
     <title>The Daily Paw | Editor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="icon" type="image/png" href="tdp.png">
     <style>
         :root { --win-gray: #d4d0c8; --win-blue: #000080; }
         body { background: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 0; padding: 15px; }
         .win-window { background: var(--win-gray); color: black; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 15px; max-width: 500px; margin: auto; }
         .win-title { background: var(--win-blue); color: white; padding: 4px; font-weight: bold; margin-bottom: 15px; font-size: 14px; }
-        .win-btn { padding: 4px 8px; background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; font-family: inherit; font-size: 12px; }
-        .win-btn:active { border: 2px inset #fff; }
-        .toolbar { display: flex; gap: 4px; margin-bottom: 5px; flex-wrap: wrap; }
-        input, textarea { width: 95%; padding: 5px; margin-bottom: 10px; border: 2px inset #fff; font-family: inherit; }
-        #status-msg { background: #000; color: #0f0; padding: 5px; font-family: monospace; font-size: 11px; margin-top: 10px; border: 2px inset #fff; }
-        .preview-pane { background: white; border: 1px solid #000; padding: 10px; margin-top: 10px; min-height: 50px; font-family: 'Georgia', serif; overflow-wrap: break-word; }
-        .img-preview { width: 100%; max-height: 150px; object-fit: contain; border: 1px solid #000; margin-top: 5px; display: none; }
+        .win-btn { padding: 4px 8px; background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; font-family: inherit; }
+        .toolbar { display: flex; gap: 4px; margin-bottom: 5px; }
+        textarea { width: 95%; padding: 5px; border: 2px inset #fff; font-family: inherit; height: 150px; }
+        .preview-pane { background: white; border: 1px solid #000; padding: 10px; margin-top: 10px; color: black; min-height: 40px; }
+        #status-msg { background: #000; color: #0f0; padding: 5px; font-family: monospace; font-size: 11px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="win-window">
     <div class="win-title">[ NEWS_EDITOR.EXE ]</div>
-    
-    <div style="margin-bottom:10px;">
-        <a href="index.html" class="win-btn" style="text-decoration:none; color:black;">< BACK</a>
-    </div>
-
+    <a href="index.html" class="win-btn" style="text-decoration:none; color:black; font-size:10px;">< BACK</a>
+    <br><br>
     <label>Headline:</label><br>
-    <input type="text" id="headline" placeholder="Enter title..." oninput="updatePreview()">
-
-    <label>Toolbar:</label>
-    <div class="toolbar">
-        <button class="win-btn" onclick="tag('b')"><b>B</b></button>
-        <button class="win-btn" onclick="tag('i')"><i>I</i></button>
-        <button class="win-btn" onclick="tag('u')"><u>U</u></button>
-        <button class="win-btn" onclick="tag('h1')">H1</button>
-        <button class="win-btn" onclick="tag('h2')">H2</button>
+    <input type="text" id="headline" style="width:95%;" oninput="updatePreview()">
+    
+    <div class="toolbar" style="margin-top:10px;">
+        <button class="win-btn" onclick="tag('b')">B</button>
+        <button class="win-btn" onclick="tag('i')">I</button>
+        <button class="win-btn" onclick="tag('u')">U</button>
         <button class="win-btn" onclick="tag('br')">LINE</button>
     </div>
+    <textarea id="bodyText" oninput="updatePreview()"></textarea>
 
-    <textarea id="bodyText" rows="10" placeholder="Write story..." oninput="updatePreview()"></textarea>
-
-    <div style="border: 1px solid #808080; padding: 8px; background: #c0c0c0; margin-bottom: 10px;">
-        <input type="file" id="fileInput" accept="image/*" style="display:none;">
+    <div style="background:#c0c0c0; border:1px solid #808080; padding:10px; margin-top:10px;">
         <button class="win-btn" onclick="document.getElementById('fileInput').click()">ATTACH IMAGE</button>
+        <input type="file" id="fileInput" accept="image/*" style="display:none;">
         <input type="hidden" id="imgSrc">
-        <img id="img-prev" class="img-preview">
+        <img id="img-prev" style="width:100%; display:none; margin-top:5px; border:1px solid #000;">
     </div>
 
-    <label>Live Preview:</label>
-    <div id="live-preview" class="preview-pane"></div>
-
-    <button class="win-btn" style="width:100%; background:#2ecc71; color:white; margin-top:15px; height:35px;" onclick="publish()">PUBLISH</button>
-
+    <div class="preview-pane" id="live-preview"></div>
+    <button class="win-btn" style="width:100%; background:#2ecc71; color:white; margin-top:10px;" onclick="publish()">PUBLISH</button>
     <div id="status-msg">> Ready.</div>
 </div>
 
 <script>
     const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
-
-    function log(msg, isError = false) {
-        const el = document.getElementById('status-msg');
-        el.innerText = "> " + msg;
-        el.style.color = isError ? "#f55" : "#0f0";
-    }
-
+    
     function tag(t) {
-        const area = document.getElementById('bodyText');
-        const start = area.selectionStart;
-        const end = area.selectionEnd;
-        const txt = area.value;
-        const open = `<${t}>`;
-        const close = t === 'br' ? '' : `</${t}>`;
-        area.value = txt.slice(0, start) + open + txt.slice(start, end) + close + txt.slice(end);
+        const a = document.getElementById('bodyText');
+        const s = a.selectionStart, e = a.selectionEnd;
+        const tagO = `<${t}>`, tagC = t === 'br' ? '' : `</${t}>`;
+        a.value = a.value.slice(0, s) + tagO + a.value.slice(s, e) + tagC + a.value.slice(e);
         updatePreview();
     }
 
     function updatePreview() {
-        const head = document.getElementById('headline').value;
-        const body = document.getElementById('bodyText').value;
-        document.getElementById('live-preview').innerHTML = `<h3>${head}</h3><div>${body.replace(/\n/g, '<br>')}</div>`;
+        const h = document.getElementById('headline').value;
+        const b = document.getElementById('bodyText').value;
+        document.getElementById('live-preview').innerHTML = `<strong>${h}</strong><br>${b.replace(/\n/g, '<br>')}`;
     }
 
     document.getElementById('fileInput').onchange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        log("Uploading...");
-        const path = `${Date.now()}_${file.name}`;
+        const path = `avatars/${Date.now()}_${file.name}`;
         const { error } = await _supabase.storage.from('article-images').upload(path, file);
-        if (error) return log(error.message, true);
+        if (error) return alert(error.message);
         const { data } = _supabase.storage.from('article-images').getPublicUrl(path);
         document.getElementById('imgSrc').value = data.publicUrl;
         document.getElementById('img-prev').src = data.publicUrl;
-        document.getElementById('img-prev').style.display = "block";
-        log("Image Ready.");
+        document.getElementById('img-prev').style.display = 'block';
     };
 
     async function publish() {
-        const title = document.getElementById('headline').value;
-        const content = document.getElementById('bodyText').value;
-        const image_url = document.getElementById('imgSrc').value;
-        if (!title || !content) return log("Missing text!", true);
-
         const { data: { user } } = await _supabase.auth.getUser();
-        if (!user) return log("Not logged in!", true);
-
-        log("Sending to archive...");
+        if (!user) return alert("Log in first!");
         const { error } = await _supabase.from('articles').insert([{
-            title, content, image_url, user_id: user.id, date: new Date().toLocaleDateString()
+            title: document.getElementById('headline').value,
+            content: document.getElementById('bodyText').value,
+            image_url: document.getElementById('imgSrc').value,
+            user_id: user.id,
+            date: new Date().toLocaleDateString()
         }]);
-
-        if (error) log(error.message, true);
-        else window.location.href = "index.html";
+        if (!error) window.location.href = "index.html";
     }
 </script>
 </body>
