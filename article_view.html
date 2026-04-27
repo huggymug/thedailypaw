@@ -13,14 +13,14 @@
         h1 { border-bottom: 3px solid black; padding-bottom: 10px; margin-top: 0; }
         img { width: 100%; border: 1px solid #000; margin-bottom: 15px; }
         .comment-box { background: #f0f0f0; border-left: 4px solid #000080; padding: 10px; margin-top: 10px; position: relative; font-family: sans-serif; }
-        .del-com { color: red; cursor: pointer; font-size: 0.7rem; float: right; }
+        .del-com { color: red; cursor: pointer; font-size: 0.7rem; float: right; font-weight: bold; }
         textarea { width: 100%; height: 60px; border: 2px inset #fff; padding: 5px; margin-top: 10px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 <div class="nav-header">
     <a href="index.html" class="win-btn">< BACK</a>
-    <span style="color:white; font-weight:bold;">ARCHIVE_VIEW</span>
+    <span style="color:white; font-weight:bold;">POST_VIEW</span>
 </div>
 <div id="article-container"><div class="paper">Loading...</div></div>
 <script>
@@ -28,6 +28,7 @@
     const artId = new URLSearchParams(window.location.search).get('id');
     let currentUser = null;
     let userRank = 'user';
+
     async function loadData() {
         const { data: { session } } = await _supabase.auth.getSession();
         if (session) {
@@ -37,29 +38,46 @@
         }
         const { data: art } = await _supabase.from('articles').select('*, profiles(username)').eq('id', artId).single();
         if (art) {
-            document.getElementById('article-container').innerHTML = `<div class="paper"><small>${art.date}</small> | By: <a href="profile.html?id=${art.user_id}">${art.profiles?.username || 'User'}</a><h1>${art.title}</h1>${art.image_url ? `<img src="${art.image_url}">` : ''}<div style="white-space: pre-wrap;">${art.content}</div><hr><h3>Responses</h3><div id="comment-list"></div><textarea id="comment-input" placeholder="Write a response..."></textarea><button class="win-btn" style="background:#2ecc71; color:white; width:100%; margin-top:5px;" onclick="sendComment()">POST RESPONSE</button></div>`;
+            document.getElementById('article-container').innerHTML = `
+                <div class="paper">
+                    <small>${art.date}</small> | By: <a href="profile.html?id=${art.user_id}">${art.profiles?.username || 'User'}</a>
+                    <h1>${art.title}</h1>
+                    ${art.image_url ? `<img src="${art.image_url}">` : ''}
+                    <div style="white-space: pre-wrap;">${art.content}</div>
+                    <hr>
+                    <h3>Responses</h3>
+                    <div id="comment-list"></div>
+                    <textarea id="comment-input" placeholder="Add to the archive..."></textarea>
+                    <button class="win-btn" style="background:#2ecc71; color:white; width:100%; margin-top:5px;" onclick="sendComment()">SUBMIT</button>
+                </div>`;
             loadComments();
         }
     }
+
     async function loadComments() {
         const { data: comments } = await _supabase.from('comments').select('*, profiles(username)').eq('article_id', artId);
         let html = "";
         comments?.forEach(c => {
             const canDel = (currentUser && currentUser.id === c.user_id) || userRank === 'admin';
-            const delBtn = canDel ? `<span class="del-com" onclick="deleteComment('${c.id}')">[DELETE]</span>` : '';
+            const delBtn = canDel ? `<span class="del-com" onclick="deleteComment('${c.id}')">[X]</span>` : '';
             html += `<div class="comment-box">${delBtn}<strong>${c.profiles?.username || 'Guest'}</strong>: ${c.body}</div>`;
         });
         document.getElementById('comment-list').innerHTML = html || "<p>No responses yet.</p>";
     }
+
     async function sendComment() {
         const txt = document.getElementById('comment-input').value;
-        if (!currentUser || !txt) return alert("Log in to comment!");
+        if (!currentUser || !txt) return alert("Please log in.");
         await _supabase.from('comments').insert([{ article_id: artId, user_id: currentUser.id, body: txt }]);
         document.getElementById('comment-input').value = "";
         loadComments();
     }
+
     async function deleteComment(id) {
-        if (confirm("Delete response?")) { await _supabase.from('comments').delete().eq('id', id); loadComments(); }
+        if (!confirm("Delete this response?")) return;
+        const { error } = await _supabase.from('comments').delete().eq('id', id);
+        if (error) alert(error.message);
+        else loadComments();
     }
     loadData();
 </script>
