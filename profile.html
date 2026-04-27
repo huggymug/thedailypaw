@@ -2,146 +2,81 @@
 <html>
 <head>
     <title>The Daily Paw | Profile</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="icon" type="image/png" href="tdp.png">
     <style>
         :root { --win-gray: #d4d0c8; --win-blue: #000080; }
-        body { background: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 0; padding: 20px; padding-top: 60px; }
+        body { background: #3b3b3b; color: white; font-family: "Segoe UI", Arial; padding: 20px; padding-top: 65px; }
         .nav-header { position: fixed; top: 0; left: 0; right: 0; background: var(--win-blue); padding: 10px; display: flex; justify-content: space-between; z-index: 100; border-bottom: 2px solid #fff; }
-        .win-window { background: var(--win-gray); color: black; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 15px; max-width: 600px; margin: auto; }
-        .win-title { background: var(--win-blue); color: white; padding: 4px; font-weight: bold; margin-bottom: 15px; }
-        .win-btn { background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 6px 12px; cursor: pointer; font-weight: bold; text-decoration: none; color: black; font-size: 0.8rem; display: inline-block; }
-        .post-item { background: white; border: 1px solid #000; padding: 10px; margin-top: 10px; display: block; color: black; text-decoration: none; }
-        input[type="text"] { border: 2px inset #fff; padding: 4px; font-family: inherit; }
-        #debug-log { background: black; color: #00ff00; font-family: monospace; font-size: 0.7rem; padding: 8px; margin-top: 15px; border: 2px inset #fff; }
+        .win-window { background: var(--win-gray); color: black; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 15px; max-width: 500px; margin: auto; }
+        .win-btn { padding: 8px 15px; background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; font-family: inherit; font-size: 0.8rem; }
+        #status-log { background: #000; color: #0f0; padding: 5px; font-family: monospace; font-size: 0.7rem; margin-top: 10px; border: 2px inset #fff; }
     </style>
 </head>
 <body>
 
 <div class="nav-header">
-    <a href="index.html" class="win-btn">< BACK</a>
+    <a href="index.html" style="color:white; text-decoration:none; font-weight:bold;">< BACK</a>
     <span style="color:white; font-weight:bold;">USER_PROFILE.EXE</span>
 </div>
 
 <div class="win-window">
-    <div class="win-title">PROFILE_DETAILS</div>
+    <h2 id="username-display">Loading...</h2>
+    <hr>
     
-    <div id="profile-display">
-        <h2 id="name-heading"><span id="display-name">Loading...</span></h2>
-        <p>Rank: <strong id="display-rank">User</strong></p>
-        
-        <div id="edit-tools" style="display:none; margin-bottom:15px;">
-            <button class="win-btn" onclick="enableEdit()">EDIT PROFILE</button>
-        </div>
+    <div id="admin-tools" style="display:none; padding:10px; border:1px dashed #404040; background:#c0c0c0;">
+        <p><strong>ADMIN PRIVILEGES:</strong></p>
+        <button class="win-btn" style="background:#2ecc71; color:white;" onclick="setRank('admin')">PROMOTE TO ADMIN</button>
+        <button class="win-btn" style="background:#ff5555; color:white;" onclick="setRank('user')">DEMOTE TO USER</button>
     </div>
 
-    <div id="profile-edit" style="display:none; margin-bottom:15px;">
-        <label>New Username:</label><br>
-        <input type="text" id="edit-username-input"><br><br>
-        <button class="win-btn" style="background:#2ecc71; color:white;" onclick="saveProfile()">SAVE CHANGES</button>
-        <button class="win-btn" onclick="disableEdit()">CANCEL</button>
-    </div>
-
-    <div class="win-title">USER_POSTS</div>
-    <div id="user-posts"></div>
-
-    <div id="admin-tools" style="display:none; margin-top:20px; border-top:1px solid #808080; padding-top:10px;">
-        <p><strong>Admin Actions:</strong></p>
-        <button class="win-btn" onclick="setRank('admin')">PROMOTE TO ADMIN</button>
-        <button class="win-btn" onclick="setRank('user')">DEMOTE TO USER</button>
-    </div>
-
-    <div id="debug-log">System check: Ready.</div>
+    <div id="status-log">> Initializing...</div>
 </div>
 
 <script>
     const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
-    
-    const params = new URLSearchParams(window.location.search);
-    const targetUserId = params.get('id');
+    const targetId = new URLSearchParams(window.location.search).get('id');
 
     function log(msg, isError = false) {
-        document.getElementById('debug-log').innerHTML = `<span style="color:${isError ? 'red' : '#00ff00'}">> ${msg}</span>`;
+        const el = document.getElementById('status-log');
+        el.innerText = "> " + msg;
+        el.style.color = isError ? "#f55" : "#0f0";
     }
 
     async function loadProfile() {
-        if (!targetUserId) return;
+        if (!targetId) return log("No User ID found.", true);
 
-        // 1. Get Profile Data
-        const { data: profile } = await _supabase.from('profiles').select('*').eq('id', targetUserId).single();
-        if (!profile) return;
-
-        let badge = profile.rank === 'admin' ? ' ☑' : '';
-        document.getElementById('display-name').innerText = profile.username + badge;
-        document.getElementById('display-rank').innerText = profile.rank || 'User';
-        document.getElementById('edit-username-input').value = profile.username;
-
-        // 2. Check Permissions
-        const { data: { user } } = await _supabase.auth.getUser();
-        if (user) {
-            // Show edit button if it's your own profile
-            if (user.id === targetUserId) {
-                document.getElementById('edit-tools').style.display = 'block';
-            }
-            
-            // Show admin tools if you are an admin
-            let { data: currentUserProfile } = await _supabase.from('profiles').select('rank').eq('id', user.id).single();
-            if (currentUserProfile?.rank === 'admin') {
-                document.getElementById('admin-tools').style.display = 'block';
-            }
+        // 1. Fetch target user info
+        const { data: profile } = await _supabase.from('profiles').select('*').eq('id', targetId).single();
+        if (profile) {
+            document.getElementById('username-display').innerText = profile.username + (profile.rank === 'admin' ? ' ☑' : '');
+            log(`Viewing: ${profile.username} (Rank: ${profile.rank})`);
         }
 
-        // 3. Load Posts
-        let { data: posts } = await _supabase.from('articles').select('*').eq('user_id', targetUserId);
-        const postList = document.getElementById('user-posts');
-        postList.innerHTML = posts?.length ? "" : "No posts found.";
-        posts?.forEach(p => {
-            const a = document.createElement('a');
-            a.className = 'post-item';
-            a.href = `article_view.html?id=${p.id}`;
-            a.innerHTML = `<strong>${p.title}</strong><br><small>${p.date}</small>`;
-            postList.appendChild(a);
-        });
-    }
-
-    function enableEdit() {
-        document.getElementById('profile-display').style.display = 'none';
-        document.getElementById('profile-edit').style.display = 'block';
-    }
-
-    function disableEdit() {
-        document.getElementById('profile-display').style.display = 'block';
-        document.getElementById('profile-edit').style.display = 'none';
-    }
-
-    async function saveProfile() {
-        const newName = document.getElementById('edit-username-input').value;
-        if (!newName) return;
-
-        log("Updating database...");
-        const { error } = await _supabase
-            .from('profiles')
-            .update({ username: newName })
-            .eq('id', targetUserId);
-
-        if (error) {
-            log(error.message, true);
-        } else {
-            log("Success! Reloading...");
-            location.reload();
+        // 2. Check if current logged-in user is an admin
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (user) {
+            const { data: me } = await _supabase.from('profiles').select('rank').eq('id', user.id).single();
+            if (me?.rank === 'admin') {
+                document.getElementById('admin-tools').style.display = 'block';
+            }
         }
     }
 
     async function setRank(newRank) {
-        log("Updating rank...");
+        log(`Pushing ${newRank} rank to database...`);
+        
         const { error } = await _supabase
             .from('profiles')
             .update({ rank: newRank })
-            .eq('id', targetUserId);
-            
-        if (error) log(error.message, true);
-        else location.reload();
+            .eq('id', targetId);
+
+        if (error) {
+            log(`FAIL: ${error.message} (Code: ${error.code})`, true);
+        } else {
+            log("SUCCESS! Refreshing...");
+            setTimeout(() => location.reload(), 800);
+        }
     }
 
     loadProfile();
