@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>The Daily Paw | Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="icon" type="image/png" href="tdp.png">
+    <style>
+        :root { --win-gray: #d4d0c8; --win-blue: #000080; }
+        body { background: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 0; padding: 20px; display: flex; align-items: center; justify-content: center; min-height: 80vh; }
+        .win-window { background: var(--win-gray); color: black; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 15px; width: 100%; max-width: 350px; }
+        .win-title { background: var(--win-blue); color: white; padding: 4px; font-weight: bold; margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between; }
+        .win-btn { padding: 5px 15px; background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; font-family: inherit; }
+        .win-btn:active { border: 2px inset #fff; }
+        input { width: 90%; padding: 5px; margin-bottom: 10px; border: 2px inset #fff; font-family: inherit; }
+        #status-msg { background: #000; color: #0f0; padding: 8px; font-family: monospace; font-size: 11px; margin-top: 15px; border: 2px inset #fff; min-height: 20px; }
+        .tab-box { display: flex; gap: 2px; margin-bottom: -2px; position: relative; z-index: 10; }
+        .tab { background: var(--win-gray); border: 2px solid #fff; border-bottom: none; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+        .tab.active { padding-bottom: 6px; margin-top: -2px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div style="width: 100%; max-width: 350px;">
+    <div class="tab-box">
+        <div id="tab-login" class="tab active" onclick="switchMode('login')">Sign In</div>
+        <div id="tab-signup" class="tab" onclick="switchMode('signup')">Sign Up</div>
+    </div>
+    <div class="win-window">
+        <div class="win-title">
+            <span id="win-mode-title">USER_AUTH.EXE</span>
+            <span>[?] [X]</span>
+        </div>
+        
+        <div id="auth-form">
+            <label>Email:</label><br>
+            <input type="email" id="email" placeholder="user@example.com">
+            
+            <label>Password:</label><br>
+            <input type="password" id="password" placeholder="******">
+            
+            <div id="signup-fields" style="display:none;">
+                <label>Display Name:</label><br>
+                <input type="text" id="username" placeholder="CoolGuy99">
+            </div>
+
+            <button class="win-btn" id="submit-btn" style="width:100%; margin-top:10px;" onclick="handleAuth()">ENTER</button>
+            <button class="win-btn" style="width:100%; margin-top:5px;" onclick="window.location.href='index.html'">CANCEL</button>
+        </div>
+
+        <div id="status-msg">> System ready.</div>
+    </div>
+</div>
+
+<script>
+    const _supabase = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
+    let mode = 'login';
+
+    function log(msg, isError = false) {
+        const el = document.getElementById('status-msg');
+        el.innerText = "> " + msg;
+        el.style.color = isError ? "#f55" : "#0f0";
+    }
+
+    function switchMode(m) {
+        mode = m;
+        document.getElementById('tab-login').className = m === 'login' ? 'tab active' : 'tab';
+        document.getElementById('tab-signup').className = m === 'signup' ? 'tab active' : 'tab';
+        document.getElementById('signup-fields').style.display = m === 'signup' ? 'block' : 'none';
+        document.getElementById('win-mode-title').innerText = m === 'signup' ? 'NEW_USER.EXE' : 'USER_AUTH.EXE';
+    }
+
+    async function handleAuth() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const username = document.getElementById('username').value;
+
+        if (!email || !password) return log("Error: Missing fields", true);
+
+        if (mode === 'signup') {
+            if (!username) return log("Error: Username required", true);
+            log("Creating account...");
+            const { data, error } = await _supabase.auth.signUp({ 
+                email, 
+                password,
+                options: { data: { rank: 'user' } }
+            });
+            
+            if (error) return log(error.message, true);
+            
+            // Create the profile row manually
+            if (data.user) {
+                await _supabase.from('profiles').insert([
+                    { id: data.user.id, username: username, rank: 'user' }
+                ]);
+            }
+            log("Account created! Check email.");
+        } else {
+            log("Authenticating...");
+            const { error } = await _supabase.auth.signInWithPassword({ email, password });
+            if (error) return log(error.message, true);
+            log("Success! Redirecting...");
+            setTimeout(() => window.location.href = 'index.html', 800);
+        }
+    }
+</script>
+</body>
+</html>
