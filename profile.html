@@ -8,93 +8,85 @@
     <style>
         :root { --win-gray: #d4d0c8; --win-blue: #000080; }
         body { background: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 0; padding: 20px; padding-top: 65px; }
-        .win-window { background: var(--win-gray); color: black; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 15px; max-width: 500px; margin: auto; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
-        .win-title { background: var(--win-blue); color: white; padding: 4px; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .win-window { background: var(--win-gray); color: black; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 15px; max-width: 500px; margin: auto; }
+        .win-title { background: var(--win-blue); color: white; padding: 4px; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; font-size: 12px; }
         .win-btn { padding: 5px 12px; background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; margin-top: 10px; margin-right: 5px; font-size: 12px; color: black; text-decoration: none; display: inline-block; }
         .win-btn:active { border: 2px inset #fff; }
         .pfp-img { width: 80px; height: 80px; border: 2px inset #fff; object-fit: cover; background: #808080; }
-        .bio-box { background: #e0e0e0; padding: 10px; border: 1px solid #808080; margin: 10px 0; font-style: italic; min-height: 40px; color: #333; }
-        input, textarea { width: 100%; margin-top: 5px; border: 2px inset #fff; padding: 3px; background: white; color: black; font-family: sans-serif; box-sizing: border-box; }
-        .stats { font-size: 11px; font-weight: bold; color: #444; margin-bottom: 10px; }
-        
-        /* Badge Styles */
-        .badge { font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: bold; margin-left: 5px; vertical-align: middle; display: inline-block; border: 1px solid rgba(0,0,0,0.2); }
-        .badge-og { background: linear-gradient(45deg, #ffd700, #ff8c00); color: #000; border: 1px solid #b8860b; }
+        .bio-box { background: #e0e0e0; padding: 10px; border: 1px solid #808080; margin: 10px 0; font-style: italic; min-height: 40px; color: #333; font-size: 13px; }
+        input, textarea { width: 100%; margin-top: 5px; border: 2px inset #fff; padding: 3px; background: white; color: black; box-sizing: border-box; font-family: sans-serif; }
+        .badge { font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: bold; margin-left: 5px; display: inline-block; border: 1px solid rgba(0,0,0,0.2); }
+        .badge-og { background: #ffd700; color: #000; }
         .badge-verified { background: #1da1f2; color: white; }
-
         #file-input { display: none; }
         #status-log { background: #000; color: #0f0; padding: 8px; font-family: monospace; font-size: 11px; margin-top: 15px; border: 2px inset #fff; }
+        .stats-bar { font-size: 11px; font-weight: bold; color: #444; margin-top: 5px; cursor: pointer; text-decoration: underline; }
     </style>
 </head>
 <body>
 
 <div class="win-window">
-    <div class="win-title">
-        <span>USER_PROFILE.EXE</span>
-        <span onclick="location.reload()" style="cursor:pointer;">[X]</span>
-    </div>
+    <div class="win-title"><span>PROFILE_VIEWER.EXE</span></div>
     
-    <div id="profile-content">
-        <div style="display: flex; gap: 15px; align-items: center;">
-            <img id="pfp-display" src="https://github.com/huggymug/thedailypaw/blob/main/defaultprofile.png?raw=true" class="pfp-img">
-            <div>
-                <h2 style="margin:0; font-size: 1.2em; display: flex; align-items: center;">
-                    <span id="username-display">Connecting...</span>
-                    <span id="badge-container"></span>
-                </h2>
-                <div id="rank-display" style="font-size:11px; font-weight:bold;">[CHECKING...]</div>
-                <div id="follow-stats" class="stats">Followers: 0 | Following: 0</div>
-            </div>
+    <div style="display: flex; gap: 15px; align-items: center;">
+        <img id="pfp-display" src="https://github.com/huggymug/thedailypaw/blob/main/defaultprofile.png?raw=true" class="pfp-img">
+        <div>
+            <h2 style="margin:0; font-size: 1.2em; display: flex; align-items: center;">
+                <span id="username-display">...</span>
+                <span id="badge-container"></span>
+            </h2>
+            <div id="rank-display" style="font-size:11px; font-weight:bold;"></div>
+            <div id="follow-stats" class="stats-bar" onclick="goToConnections()">Followers: 0 | Following: 0</div>
         </div>
-
-        <div id="view-mode">
-            <div id="bio-display" class="bio-box">Waiting for data...</div>
-            <button id="follow-btn" class="win-btn" style="display:none;" onclick="toggleFollow()">FOLLOW</button>
-            <button id="dm-btn" class="win-btn" style="display:none;" onclick="openDM()">SEND MESSAGE</button>
-        </div>
-
-        <div id="edit-mode" style="display:none;">
-            <label style="font-size:11px; font-weight:bold;">DISPLAY NAME:</label>
-            <input type="text" id="edit-username">
-            <label style="display:block; margin-top:10px; font-size:11px; font-weight:bold;">PROFILE AVATAR:</label>
-            <input type="file" id="file-input" accept="image/*" onchange="handleImage(this)">
-            <button class="win-btn" onclick="document.getElementById('file-input').click()">UPLOAD IMAGE</button>
-            <div id="upload-status" style="font-size:10px; color:blue; margin-top:4px;"></div>
-            <label style="display:block; margin-top:10px; font-size:11px; font-weight:bold;">BIOGRAPHY:</label>
-            <textarea id="edit-bio" rows="3"></textarea>
-            <button class="win-btn" onclick="saveProfile()" style="background:#2ecc71; color:white;">SAVE SETTINGS</button>
-            <button class="win-btn" onclick="toggleEdit(false)">CANCEL</button>
-        </div>
-
-        <div id="admin-tools" style="display:none; border-top:1px solid #888; margin-top:15px; padding-top:10px;">
-            <span style="font-size:10px; font-weight:bold; color:red;">ADMINISTRATOR CONSOLE:</span><br>
-            <button class="win-btn" onclick="setRank('admin')" style="color:red;">[OP USER]</button>
-            <button class="win-btn" onclick="setRank('user')">[DEOP USER]</button>
-        </div>
-
-        <button id="edit-trigger" class="win-btn" style="display:none;" onclick="toggleEdit(true)">EDIT MY PROFILE</button>
-        <button class="win-btn" onclick="location.href='index.html'">RETURN TO FEED</button>
     </div>
 
-    <div id="status-log">> Booting...</div>
+    <div id="view-mode">
+        <div id="bio-display" class="bio-box">Loading...</div>
+        <button id="follow-btn" class="win-btn" style="display:none;" onclick="toggleFollow()">FOLLOW</button>
+        <button id="dm-btn" class="win-btn" style="display:none;" onclick="openDM()">SEND MESSAGE</button>
+    </div>
+
+    <div id="edit-mode" style="display:none;">
+        <label style="font-size:11px; font-weight:bold;">USERNAME:</label>
+        <input type="text" id="edit-username">
+        
+        <label style="display:block; margin-top:10px; font-size:11px; font-weight:bold;">PHOTO:</label>
+        <input type="file" id="file-input" accept="image/*" onchange="handleImage(this)">
+        <button class="win-btn" onclick="document.getElementById('file-input').click()">UPLOAD IMAGE</button>
+        
+        <label style="display:block; margin-top:10px; font-size:11px; font-weight:bold;">BIO:</label>
+        <textarea id="edit-bio" rows="3"></textarea>
+        
+        <button class="win-btn" onclick="saveProfile()" style="background:#2ecc71; color:white;">SAVE CHANGES</button>
+        <button class="win-btn" onclick="toggleEdit(false)">CANCEL</button>
+    </div>
+
+    <div id="admin-tools" style="display:none; border-top:1px solid #888; margin-top:15px; padding-top:10px;">
+        <button class="win-btn" onclick="setRank('admin')" style="color:red;">[SET ADMIN]</button>
+        <button class="win-btn" onclick="setRank('user')">[SET USER]</button>
+    </div>
+
+    <button id="edit-trigger" class="win-btn" style="display:none;" onclick="toggleEdit(true)">EDIT PROFILE</button>
+    <button class="win-btn" onclick="location.href='index.html'">BACK</button>
+
+    <div id="status-log">> System ready.</div>
 </div>
 
 <script>
     const SB_URL = 'https://wemdedhwtlirdevkplch.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o';
-    
     const _supabase = supabase.createClient(SB_URL, SB_KEY);
     const targetId = new URLSearchParams(window.location.search).get('id');
     let currentUser = null;
-    let isFollowingUser = false;
     let base64Image = null;
+    let isFollowingUser = false;
 
-    function log(msg) { document.getElementById('status-log').innerText = "> " + msg; }
+    function log(m) { document.getElementById('status-log').innerText = "> " + m; }
 
-    function toggleEdit(show) {
-        document.getElementById('view-mode').style.display = show ? 'none' : 'block';
-        document.getElementById('edit-mode').style.display = show ? 'block' : 'none';
-        document.getElementById('edit-trigger').style.display = show ? 'none' : 'block';
+    function toggleEdit(s) {
+        document.getElementById('view-mode').style.display = s ? 'none' : 'block';
+        document.getElementById('edit-mode').style.display = s ? 'block' : 'none';
+        document.getElementById('edit-trigger').style.display = s ? 'none' : 'block';
     }
 
     function handleImage(input) {
@@ -103,93 +95,87 @@
             const reader = new FileReader();
             reader.onload = (e) => {
                 base64Image = e.target.result;
-                document.getElementById('upload-status').innerText = "Selected: " + file.name;
                 document.getElementById('pfp-display').src = base64Image;
             };
             reader.readAsDataURL(file);
         }
     }
 
-    async function setRank(newRankLabel) {
-        if(!confirm("Change user rank to " + newRankLabel.toUpperCase() + "?")) return;
-        const { error } = await _supabase.from('profiles').update({ rank: newRankLabel }).eq('id', targetId);
-        if (error) alert(error.message); else location.reload();
-    }
-
-    async function toggleFollow() {
-        if (!currentUser) return alert("Please log in.");
-        if (isFollowingUser) await _supabase.from('follows').delete().match({ follower_id: currentUser.id, following_id: targetId });
-        else await _supabase.from('follows').insert({ follower_id: currentUser.id, following_id: targetId });
-        location.reload();
-    }
-
     async function saveProfile() {
-        log("Uploading...");
+        log("Uploading data...");
         const updates = { 
             username: document.getElementById('edit-username').value,
             bio: document.getElementById('edit-bio').value
         };
         if (base64Image) updates.avatar_url = base64Image;
         const { error } = await _supabase.from('profiles').update(updates).eq('id', currentUser.id);
-        if (error) alert("Error: " + error.message); else location.reload();
+        if (error) alert(error.message); else location.reload();
+    }
+
+    async function toggleFollow() {
+        if (!currentUser) return alert("Log in to follow!");
+        if (isFollowingUser) {
+            await _supabase.from('follows').delete().match({ follower_id: currentUser.id, following_id: targetId });
+        } else {
+            await _supabase.from('follows').insert({ follower_id: currentUser.id, following_id: targetId });
+        }
+        location.reload();
+    }
+
+    async function setRank(r) {
+        const { error } = await _supabase.from('profiles').update({ rank: r }).eq('id', targetId);
+        if (error) alert(error.message); else location.reload();
     }
 
     async function init() {
-        if (!targetId) return log("ERROR: NO_ID");
+        if (!targetId) return log("ERROR: NO_ID_SPECIFIED");
+        
+        // Fetch Profile
+        const { data: p } = await _supabase.from('profiles').select('*').eq('id', targetId).single();
+        if (!p) return log("ERROR: PROFILE_NOT_FOUND");
 
-        try {
-            log("Loading profile...");
-            const { data: profile, error } = await _supabase.from('profiles').select('*').eq('id', targetId).single();
+        document.getElementById('username-display').innerText = p.username;
+        document.getElementById('bio-display').innerText = p.bio || "No bio information provided.";
+        document.getElementById('pfp-display').src = p.avatar_url || 'https://github.com/huggymug/thedailypaw/blob/main/defaultprofile.png?raw=true';
+        
+        // Stats & Rank
+        const { count: fers } = await _supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', targetId);
+        const { count: fing } = await _supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', targetId);
+        document.getElementById('follow-stats').innerText = `Followers: ${fers || 0} | Following: ${fing || 0}`;
 
-            if (error || !profile) return log("ERROR: NOT_FOUND");
+        const isAdm = p.rank === 'admin';
+        document.getElementById('rank-display').innerText = isAdm ? "[ADMIN]" : "[USER]";
+        document.getElementById('rank-display').style.color = isAdm ? "red" : "var(--win-blue)";
 
-            // Display Profile Data
-            document.getElementById('username-display').innerText = profile.username || "User";
-            document.getElementById('bio-display').innerText = profile.bio || "No bio yet.";
-            document.getElementById('pfp-display').src = profile.avatar_url || 'https://github.com/huggymug/thedailypaw/blob/main/defaultprofile.png?raw=true';
-            
-            // Badge Logic
-            let badgeHTML = "";
-            if (profile.is_original_admin) badgeHTML += '<span class="badge badge-og">ORIGINAL ADMIN</span>';
-            if (profile.is_verified) badgeHTML += '<span class="badge badge-verified">✓ VERIFIED</span>';
-            document.getElementById('badge-container').innerHTML = badgeHTML;
+        // Badges
+        let b = "";
+        if (p.is_original_admin) b += '<span class="badge badge-og">OG ADMIN</span>';
+        if (p.is_verified) b += '<span class="badge badge-verified">✓</span>';
+        document.getElementById('badge-container').innerHTML = b;
 
-            // Check Rank
-            const isRankAdmin = (profile.rank === 'admin');
-            const rankLabel = document.getElementById('rank-display');
-            rankLabel.innerText = isRankAdmin ? "[ADMINISTRATOR]" : "[USER]";
-            rankLabel.style.color = isRankAdmin ? "red" : "var(--win-blue)";
-
-            // Counts
-            const { count: fers } = await _supabase.from('follows').select('*', { count: 'exact' }).eq('following_id', targetId);
-            const { count: fing } = await _supabase.from('follows').select('*', { count: 'exact' }).eq('follower_id', targetId);
-            document.getElementById('follow-stats').innerText = `Followers: ${fers || 0} | Following: ${fing || 0}`;
-
-            // Session
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (session) {
-                currentUser = session.user;
-                if (currentUser.id === targetId) {
-                    document.getElementById('edit-trigger').style.display = 'block';
-                    document.getElementById('edit-username').value = profile.username || "";
-                    document.getElementById('edit-bio').value = profile.bio || "";
-                } else {
-                    document.getElementById('dm-btn').style.display = 'block';
-                    const { data: followCheck } = await _supabase.from('follows').select('*').match({ follower_id: currentUser.id, following_id: targetId }).single();
-                    isFollowingUser = !!followCheck;
-                    const fBtn = document.getElementById('follow-btn');
-                    fBtn.style.display = 'block';
-                    fBtn.innerText = isFollowingUser ? "UNFOLLOW" : "FOLLOW";
-                    
-                    const { data: viewer } = await _supabase.from('profiles').select('rank').eq('id', currentUser.id).single();
-                    if (viewer && viewer.rank === 'admin') document.getElementById('admin-tools').style.display = 'block';
-                }
+        // Session Logic
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (session) {
+            currentUser = session.user;
+            if (currentUser.id === targetId) {
+                document.getElementById('edit-trigger').style.display = 'block';
+                document.getElementById('edit-username').value = p.username;
+                document.getElementById('edit-bio').value = p.bio || "";
+            } else {
+                document.getElementById('dm-btn').style.display = 'block';
+                document.getElementById('follow-btn').style.display = 'block';
+                const { data: fCheck } = await _supabase.from('follows').select('*').match({ follower_id: currentUser.id, following_id: targetId }).single();
+                isFollowingUser = !!fCheck;
+                document.getElementById('follow-btn').innerText = isFollowingUser ? "UNFOLLOW" : "FOLLOW";
+                
+                const { data: v } = await _supabase.from('profiles').select('rank').eq('id', currentUser.id).single();
+                if (v && v.rank === 'admin') document.getElementById('admin-tools').style.display = 'block';
             }
-            log("System online.");
-        } catch (e) { log("EXCEPTION: " + e.message); }
+        }
     }
 
     function openDM() { window.location.href = "dm.html?to=" + targetId; }
+    function goToConnections() { window.location.href = "follows.html?id=" + targetId; }
     init();
 </script>
 </body>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>The Daily Paw | Connections</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="icon" type="image/png" href="tdp.png">
+    <style>
+        :root { --win-gray: #d4d0c8; --win-blue: #000080; }
+        body { background: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 0; padding: 20px; padding-top: 65px; }
+        .win-window { background: var(--win-gray); color: black; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; padding: 15px; max-width: 450px; margin: auto; }
+        .win-title { background: var(--win-blue); color: white; padding: 4px; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; font-size: 12px; }
+        .tabs { display: flex; gap: 2px; margin-bottom: -2px; position: relative; z-index: 2; }
+        .tab { padding: 5px 15px; background: #b0b0b0; border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: none; cursor: pointer; font-size: 11px; font-weight: bold; }
+        .tab.active { background: var(--win-gray); padding-bottom: 7px; margin-top: -2px; border-right: 2px solid #404040; }
+        .list-container { background: white; border: 2px inset #fff; height: 350px; overflow-y: auto; padding: 0; }
+        .user-card { display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid #d4d0c8; text-decoration: none; color: black; }
+        .user-card:hover { background: #000080; color: white; }
+        .user-card img { width: 35px; height: 35px; border: 1px solid #808080; object-fit: cover; background: #c0c0c0; }
+        .user-info { display: flex; flex-direction: column; }
+        .user-name { font-weight: bold; font-size: 13px; }
+        .user-rank { font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .win-btn { padding: 5px 15px; background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 12px; color: black; }
+        #status-log { background: #000; color: #0f0; padding: 6px; font-family: monospace; font-size: 10px; margin-top: 10px; border: 2px inset #fff; }
+    </style>
+</head>
+<body>
+
+<div class="win-window">
+    <div class="win-title">
+        <span>CONNECTIONS.EXE</span>
+        <span onclick="window.history.back()" style="cursor:pointer;">[X]</span>
+    </div>
+    
+    <div class="tabs">
+        <div id="tab-followers" class="tab active" onclick="switchTab('followers')">FOLLOWERS</div>
+        <div id="tab-following" class="tab" onclick="switchTab('following')">FOLLOWING</div>
+    </div>
+
+    <div class="list-container" id="user-list">
+        <div style="padding: 20px; text-align: center; color: #888; font-size: 12px;">Initializing...</div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <button class="win-btn" onclick="window.history.back()">CLOSE</button>
+        <div id="count-display" style="font-size: 11px; font-weight: bold; margin-top: 10px;">Users: 0</div>
+    </div>
+
+    <div id="status-log">> Ready.</div>
+</div>
+
+<script>
+    const SB_URL = 'https://wemdedhwtlirdevkplch.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o';
+    const _supabase = supabase.createClient(SB_URL, SB_KEY);
+    
+    const targetUserId = new URLSearchParams(window.location.search).get('id');
+    let currentMode = 'followers';
+
+    function log(m) { document.getElementById('status-log').innerText = "> " + m; }
+
+    function switchTab(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + mode).classList.add('active');
+        fetchUsers();
+    }
+
+    async function fetchUsers() {
+        if (!targetUserId) return log("ERROR: MISSING_ID");
+        const listDiv = document.getElementById('user-list');
+        listDiv.innerHTML = '<div style="padding:20px; color:#888;">Fetching...</div>';
+
+        try {
+            let query;
+            if (currentMode === 'followers') {
+                query = _supabase.from('follows').select('follower_id').eq('following_id', targetUserId);
+            } else {
+                query = _supabase.from('follows').select('following_id').eq('follower_id', targetUserId);
+            }
+
+            const { data: relations, error: relError } = await query;
+            if (relError) throw relError;
+
+            document.getElementById('count-display').innerText = "Users: " + relations.length;
+
+            if (relations.length === 0) {
+                listDiv.innerHTML = '<div style="padding:40px; color:#888; text-align:center;">No users.</div>';
+                return;
+            }
+
+            const ids = relations.map(r => currentMode === 'followers' ? r.follower_id : r.following_id);
+            const { data: profiles, error: pError } = await _supabase.from('profiles').select('id, username, avatar_url, rank').in('id', ids);
+            
+            if (pError) throw pError;
+
+            listDiv.innerHTML = "";
+            profiles.forEach(p => {
+                const card = document.createElement('a');
+                card.className = "user-card";
+                card.href = "profile.html?id=" + p.id;
+                const isAdm = p.rank === 'admin';
+                card.innerHTML = `
+                    <img src="${p.avatar_url || 'https://github.com/huggymug/thedailypaw/blob/main/defaultprofile.png?raw=true'}">
+                    <div class="user-info">
+                        <span class="user-name">${p.username || 'User'}</span>
+                        <span class="user-rank" style="color:${isAdm ? 'red' : 'blue'}">${isAdm ? 'ADMIN' : 'USER'}</span>
+                    </div>`;
+                listDiv.appendChild(card);
+            });
+            log("Loaded " + currentMode);
+        } catch (e) {
+            log("ERROR: " + e.message);
+        }
+    }
+
+    fetchUsers();
+</script>
+</body>
+</html>
