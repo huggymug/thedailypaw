@@ -25,7 +25,7 @@
 <div class="win-window">
     <div class="win-title">
         <span id="chat-target">MESSENGER.EXE</span>
-        <button onclick="window.location.href='index.html'" style="cursor:pointer;">X</button>
+        <button onclick="window.history.back()" style="cursor:pointer;">X</button>
     </div>
 
     <div id="chat-box">
@@ -37,110 +37,105 @@
         <button id="send-btn">SEND</button>
     </div>
 
-    <div id="status-bar">> Booting system...</div>
+    <div id="status-bar">> Initializing...</div>
 </div>
 
 <script>
-    // Configuration
-    const SB_URL = 'https://wemdedhwtlirdevkplch.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o';
+    // Variables defined with strict equals signs to avoid "Unexpected token :"
+    const url = 'https://wemdedhwtlirdevkplch.supabase.co';
+    const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o';
     
-    // Global State
-    let _supabase;
-    let myId = null;
-    const receiverId = new URLSearchParams(window.location.search).get('to');
+    let client;
+    let myUser = null;
+    const targetUser = new URLSearchParams(window.location.search).get('to');
 
-    function log(msg, isError = false) {
-        console.log("LOG:", msg);
-        const el = document.getElementById('status-bar');
-        el.innerText = "> " + msg;
-        el.style.color = isError ? "#f55" : "#0f0";
+    function updateLog(text, err = false) {
+        const s = document.getElementById('status-bar');
+        s.innerText = "> " + text;
+        s.style.color = err ? "#ff4444" : "#00ff00";
     }
 
-    async function start() {
-        log("Initialising Supabase Client...");
+    async function runSetup() {
+        updateLog("Connecting...");
         try {
-            _supabase = supabase.createClient(SB_URL, SB_KEY);[cite: 1]
+            client = supabase.createClient(url, key);
             
-            log("Checking session...");
-            const { data: { session }, error: sErr } = await _supabase.auth.getSession();[cite: 1]
+            const { data: { session } } = await client.auth.getSession();
             
-            if (sErr || !session) {
-                log("AUTH FAIL: No active session found.", true);
-                document.getElementById('loading-text').innerText = "Auth Error: Please Login.";
+            if (!session) {
+                updateLog("ERROR: Login required", true);
+                document.getElementById('loading-text').innerText = "Please log in to chat.";
                 return;
             }
 
-            myId = session.user.id;[cite: 1]
-            log("Handshake successful. ID: " + myId.substring(0,8));
+            myUser = session.user.id;
+            updateLog("Handshake OK.");
 
-            // Set UI
-            const { data: profile } = await _supabase.from('profiles').select('username').eq('id', receiverId).single();[cite: 1]
-            if (profile) document.getElementById('chat-target').innerText = "CHAT: " + profile.username.toUpperCase();
+            // Get profile of person you are chatting with
+            const { data: p } = await client.from('profiles').select('username').eq('id', targetUser).single();
+            if (p) document.getElementById('chat-target').innerText = "CHAT: " + p.username.toUpperCase();
 
-            // Setup Listeners
-            document.getElementById('send-btn').onclick = sendMessage;
-            document.getElementById('message-input').onkeydown = (e) => { if(e.key === 'Enter') sendMessage(); };
+            // Set up button actions
+            document.getElementById('send-btn').onclick = send;
+            document.getElementById('message-input').onkeydown = (e) => { if(e.key === 'Enter') send(); };
 
-            // Start Sync
-            log("Syncing database...");
-            fetchMessages();
-            setInterval(fetchMessages, 3000);
+            // Start message loop
+            getMsgs();
+            setInterval(getMsgs, 3000);
 
         } catch (e) {
-            log("CRITICAL STARTUP ERROR: " + e.message, true);
+            updateLog("CRITICAL: " + e.message, true);
         }
     }
 
-    async function fetchMessages() {
-        const { data, error } = await _supabase
+    async function getMsgs() {
+        const { data, error } = await client
             .from('messages')
             .select('*')
-            .or(`and(sender_id.eq.${myId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${myId})`)
-            .order('created_at', { ascending: true });[cite: 1]
+            .or(`and(sender_id.eq.${myUser},receiver_id.eq.${targetUser}),and(sender_id.eq.${targetUser},receiver_id.eq.${myUser})`)
+            .order('created_at', { ascending: true });
 
         if (error) {
-            log("SYNC ERROR: " + error.message, true);
+            updateLog("SYNC ERROR", true);
             return;
         }
 
         const box = document.getElementById('chat-box');
-        if (!data || data.length === 0) {
-            box.innerHTML = '<div style="text-align:center; color:#888; font-size:12px; margin-top:20px;">No messages found.</div>';
-        } else {
+        if (data && data.length > 0) {
             box.innerHTML = data.map(m => `
-                <div class="msg ${m.sender_id === myId ? 'sent' : 'received'}">
+                <div class="msg ${m.sender_id === myUser ? 'sent' : 'received'}">
                     ${m.content}
                 </div>
-            `).join('');[cite: 1]
+            `).join('');
             box.scrollTop = box.scrollHeight;
+        } else {
+            box.innerHTML = '<div style="text-align:center; color:#888; font-size:12px; margin-top:20px;">No messages.</div>';
         }
-        log("Sync active.");
+        updateLog("Sync active.");
     }
 
-    async function sendMessage() {
+    async function send() {
         const input = document.getElementById('message-input');
-        const text = input.value.trim();
-        if (!text) return;
+        const val = input.value.trim();
+        if (!val) return;
 
         input.value = '';
-        log("Transmitting message...");
+        updateLog("Sending...");
         
-        const { error } = await _supabase.from('messages').insert([
-            { sender_id: myId, receiver_id: receiverId, content: text }
-        ]);[cite: 1]
+        const { error } = await client.from('messages').insert([
+            { sender_id: myUser, receiver_id: targetUser, content: val }
+        ]);
 
         if (error) {
-            log("SEND ERROR: " + error.message, true);
+            updateLog("FAILED", true);
+            alert(error.message);
         } else {
-            fetchMessages();
-            log("Transmission complete.");
+            getMsgs();
+            updateLog("Sent.");
         }
     }
 
-    // Direct call instead of window.onload to force execution
-    start();
+    runSetup();
 </script>
-
 </body>
 </html>
