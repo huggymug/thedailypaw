@@ -8,28 +8,148 @@
     <link rel="icon" type="image/png" href="tdp.png">
     <style>
         :root { --win-gray: #d4d0c8; --win-blue: #000080; }
-        body { background: #3b3b3b; color: white; font-family: "Segoe UI", Arial; margin: 0; padding: 10px; padding-top: 60px; box-sizing: border-box; }
-        .nav-header { position: fixed; top: 0; left: 0; right: 0; background: var(--win-blue); padding: 10px; display: flex; justify-content: space-between; align-items: center; z-index: 100; border-bottom: 2px solid #fff; height: 50px; box-sizing: border-box; }
-        .win-window { background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; color: black; padding: 15px; width: 100%; max-width: 800px; margin: auto; box-sizing: border-box; }
-        .win-btn { padding: 4px 8px; background: var(--win-gray); border: 2px solid #fff; border-right: 2px solid #404040; border-bottom: 2px solid #404040; cursor: pointer; font-weight: bold; text-decoration: none; color: black; font-size: 0.7rem; display: flex; align-items: center; gap: 5px; }
-        .win-btn:active { border: 2px inset #fff; }
-        .discord-icon { width: 14px; height: 14px; image-rendering: pixelated; }
-        .article-card { background: white; border: 1px solid #000; margin-bottom: 12px; padding: 15px; display: block; color: black; text-decoration: none; box-shadow: 4px 4px 0 #000; position: relative; }
-        .pfp-nav { width: 32px; height: 32px; border: 2px solid #fff; cursor: pointer; object-fit: cover; background: #808080; }
-        .del-btn { position: absolute; top: 5px; right: 5px; color: red; border: 1px solid red; background: white; cursor: pointer; font-size: 0.65rem; padding: 2px 4px; }
+        
+        body { 
+            background: #3b3b3b; 
+            color: white; 
+            font-family: "Segoe UI", Arial; 
+            margin: 0; 
+            padding: 10px; 
+            padding-top: 70px; 
+            box-sizing: border-box;
+            transition: background 0.5s;
+        }
+
+        .nav-header { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            background: var(--win-blue); 
+            padding: 10px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            z-index: 100; 
+            border-bottom: 2px solid #fff; 
+            height: 60px; 
+            box-sizing: border-box;
+        }
+
+        .win-window { 
+            background: var(--win-gray); 
+            border: 2px solid #fff; 
+            border-right: 2px solid #404040; 
+            border-bottom: 2px solid #404040; 
+            color: black; 
+            padding: 15px; 
+            width: 100%;
+            max-width: 800px; 
+            margin: auto; 
+            box-sizing: border-box;
+        }
+
+        /* Standard Windows buttons */
+        .win-btn { 
+            padding: 4px 8px; 
+            background: var(--win-gray); 
+            border: 2px solid #fff; 
+            border-right: 2px solid #404040; 
+            border-bottom: 2px solid #404040; 
+            cursor: pointer; 
+            font-weight: bold; 
+            text-decoration: none; 
+            color: black; 
+            font-size: 0.75rem; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Special class for the Discord icon only (no background/border) */
+        .icon-only-btn {
+            background: none !important;
+            border: none !important;
+            padding: 0;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-only-btn:active {
+            transform: translateY(1px); /* Small click feel since there's no border */
+        }
+
+        .discord-icon { 
+            width: 35px; 
+            height: 35px; 
+            image-rendering: pixelated; 
+        }
+
+        .article-card { 
+            background: white; 
+            border: 1px solid #000; 
+            margin-bottom: 12px; 
+            padding: 15px; 
+            display: block; 
+            color: black; 
+            text-decoration: none; 
+            box-shadow: 4px 4px 0 #000; 
+            position: relative; 
+        }
+
+        .pfp-nav { 
+            width: 35px; 
+            height: 35px; 
+            border: 2px solid #fff; 
+            cursor: pointer; 
+            object-fit: cover; 
+            background: #808080; 
+        }
+
+        .del-btn { 
+            position: absolute; 
+            top: 5px; 
+            right: 5px; 
+            color: red; 
+            border: 1px solid red; 
+            background: white; 
+            cursor: pointer; 
+            font-size: 0.65rem; 
+            padding: 2px 4px; 
+        }
     </style>
 </head>
 <body>
+
 <div class="nav-header">
     <div id="auth-header" style="display:flex; align-items:center; gap:10px;"></div>
     <a href="editor.html" class="win-btn" style="background:#2ecc71; color:white;">+ POST</a>
 </div>
-<div class="win-window"><div id="articleList">INITIALIZING...</div></div>
+
+<div class="win-window">
+    <div id="articleList">INITIALIZING SYSTEM...</div>
+</div>
 
 <script>
-    const client = supabase.createClient('https://wemdedhwtlirdevkplch.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o');
+    const SB_URL = 'https://wemdedhwtlirdevkplch.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWRlZGh3dGxpcmRldmtwbGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzE5MTgsImV4cCI6MjA5MjcwNzkxOH0.fh8S3ocN9vF7orCENvYk-eD1bCFXBkhvFVOpaE32q3o';
+    const client = supabase.createClient(SB_URL, SB_KEY);
+
     let currentUser = null;
     let myRank = 0;
+
+    // --- SECRET REALTIME LISTENER ---
+    client.channel('public:secrets')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'secrets' }, payload => {
+        if (payload.new.active) {
+            document.body.style.background = "red";
+        } else {
+            document.body.style.background = "#3b3b3b";
+        }
+    }).subscribe();
 
     async function deletePost(id) {
         if (!confirm("Delete post?")) return;
@@ -39,10 +159,17 @@
 
     async function loadArticles() {
         const { data: articles } = await client.from('articles').select('*, profiles(username)').order('id', { ascending: false });
+        if (!articles) return;
+        
         document.getElementById('articleList').innerHTML = articles.map(a => {
             const canDel = currentUser && (a.user_id === currentUser.id || myRank === 1);
             const del = canDel ? `<button class="del-btn" onclick="event.preventDefault(); deletePost(${a.id})">DEL</button>` : '';
-            return `<a class="article-card" href="article_view.html?id=${a.id}">${del}<strong>${a.title}</strong><br><small>Author: ${a.profiles?.username || 'Anonymous'}</small></a>`;
+            return `
+                <a class="article-card" href="article_view.html?id=${a.id}">
+                    ${del}
+                    <strong>${a.title}</strong><br>
+                    <small>Author: ${a.profiles?.username || 'Anonymous'}</small>
+                </a>`;
         }).join('');
     }
 
@@ -50,16 +177,17 @@
         const { data: { session } } = await client.auth.getSession();
         const authDiv = document.getElementById('auth-header');
         
-        // This is the Discord button HTML
+        // Use the icon-only-btn class here
         const discordBtn = `
-            <a href="https://discord.gg/j5zd34EqKg" target="_blank" class="win-btn">
-                <img src="discordlogo.png" class="discord-icon"> DISCORD
+            <a href="https://discord.gg/j5zd34EqKg" target="_blank" class="icon-only-btn" title="Join Discord">
+                <img src="discordlogo.png" class="discord-icon">
             </a>`;
 
         if (session) {
             currentUser = session.user;
             const { data: p } = await client.from('profiles').select('*').eq('id', currentUser.id).single();
             myRank = p?.rank || 0;
+            
             authDiv.innerHTML = `
                 <img src="${p?.avatar_url || 'https://github.com/huggymug/thedailypaw/blob/main/defaultprofile.png?raw=true'}" class="pfp-nav" onclick="location.href='profile.html?id=${currentUser.id}'">
                 <button class="win-btn" onclick="client.auth.signOut().then(()=>location.reload())">OUT</button>
@@ -73,6 +201,7 @@
         }
         loadArticles();
     }
+
     init();
 </script>
 </body>
